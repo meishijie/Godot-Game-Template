@@ -91,8 +91,8 @@
 
 ### 新增可保存的游戏字段
 
-1. 在 `scripts/game_state.gd` 或 `scripts/level_state.gd` 增加 `@export` 字段  
-2. 在读写路径中接入 `GlobalState.save()`  
+1. 在 `scripts/game_state.gd` 或 `scripts/level_state.gd` 增加 `@export` 字段
+2. 在读写路径中接入 `GlobalState.save()`
 3. 注意兼容旧存档（默认值安全）
 
 ### 修改选项菜单
@@ -103,16 +103,11 @@
 
 ## 7. 已知关键坑（高优先级）
 
-1. `AppConfig` 默认仍可能指向 `addons/.../examples/scenes/*` 路径。  
-   若你要运行/发布项目自有 `scenes/`，务必核对：
-   - `addons/maaacks_game_template/base/nodes/autoloads/app_config/app_config.tscn`
-   - `addons/maaacks_game_template/base/nodes/autoloads/scene_loader/scene_loader.tscn`
-
-2. 不要直接把业务逻辑塞进 `addons` 基础脚本。  
-   推荐在 `scenes/` + `scripts/` 继承扩展，降低升级冲突。
-
-3. 菜单/弹窗流程依赖信号链。  
-   改按钮行为时先确认信号连接未断（`.tscn` 内 `[connection]`）。
+1. `AppConfig` 默认仍可能指向 `addons/.../examples/scenes/*` 路径。若你要运行/发布项目自有 `scenes/`，务必核对：
+  - `addons/maaacks_game_template/base/nodes/autoloads/app_config/app_config.tscn`
+  - `addons/maaacks_game_template/base/nodes/autoloads/scene_loader/scene_loader.tscn`
+2. 不要直接把业务逻辑塞进 `addons` 基础脚本。推荐在 `scenes/` + `scripts/` 继承扩展，降低升级冲突。
+3. 菜单/弹窗流程依赖信号链。改按钮行为时先确认信号连接未断（`.tscn` 内 `[connection]`）。
 
 ## 8. AI 代码改动约束
 
@@ -143,4 +138,3 @@
 - 主菜单：`scenes/menus/main_menu/main_menu.tscn`
 - 暂停菜单：`scenes/windows/pause_menu_layer.tscn`
 - 加载屏：`scenes/loading_screen/level_loading_screen.tscn`
-
