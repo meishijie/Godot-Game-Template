@@ -171,6 +171,7 @@ func _spawn_firework() -> void:
 	var margin := 56.0
 	var x_position := _rng.randf_range(margin, max(margin, size.x - margin))
 	var firework_type := _next_firework_type()
+	var trail : Array[Vector2] = []
 	var firework := {
 		"position": Vector2(x_position, size.y + 20.0),
 		"velocity": Vector2(
@@ -179,7 +180,7 @@ func _spawn_firework() -> void:
 		),
 		"color": _pick_firework_color(firework_type),
 		"type": firework_type,
-		"trail": Array[Vector2](),
+		"trail": trail,
 		"trail_limit": _trail_length_for_type(firework_type),
 		"alive": true,
 		"age": 0.0,
