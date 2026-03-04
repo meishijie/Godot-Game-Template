@@ -1,6 +1,8 @@
 @tool
-extends ConfirmationOverlaidWindow
+extends "res://addons/maaacks_game_template/base/nodes/windows/confirmation_overlaid_window.gd"
 ## Scene to confirm a new input for an action name.
+
+const INPUT_EVENT_HELPER_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/utilities/input_helper.gd")
 
 const LISTENING_TEXT : String = "Listening for input..."
 const FOCUS_HERE_TEXT : String = "Focus here to assign inputs."
@@ -21,7 +23,7 @@ var listening : bool = false
 var confirming : bool = false
 
 func _record_input_event(event : InputEvent) -> void:
-	last_input_text = InputEventHelper.get_text(event)
+	last_input_text = INPUT_EVENT_HELPER_SCRIPT.get_text(event)
 	if last_input_text.is_empty():
 		return
 	last_input_event = event
@@ -62,7 +64,7 @@ func _ready() -> void:
 	super._ready()
 
 func _input_matches_last(event : InputEvent) -> bool:
-	return last_input_text == InputEventHelper.get_text(event)
+	return last_input_text == INPUT_EVENT_HELPER_SCRIPT.get_text(event)
 
 func _is_mouse_input(event : InputEvent) -> bool:
 	return event is InputEventMouse

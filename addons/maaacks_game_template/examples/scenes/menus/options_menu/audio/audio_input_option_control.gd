@@ -1,5 +1,5 @@
 @tool
-extends ListOptionControl
+extends "res://addons/maaacks_game_template/base/nodes/menus/options_menu/option_control/list_option_control.gd"
 
 func _set_input_device() -> void:
 	var current_setting : Variant = _get_setting(default_value)

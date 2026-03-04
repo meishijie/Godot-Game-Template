@@ -1,6 +1,8 @@
 class_name AppSettings
 extends Node
-## Interface to read/write general application settings through [PlayerConfig].
+## Interface to read/write general application settings through [PLAYER_CONFIG_SCRIPT].
+
+const PLAYER_CONFIG_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/config/player_config.gd")
 
 const INPUT_SECTION = &'InputSettings'
 const AUDIO_SECTION = &'AudioSettings'
@@ -21,13 +23,13 @@ static var default_action_events : Dictionary
 static var initial_bus_volumes : Array
 
 static func get_config_input_events(action_name : String, default = null) -> Array:
-	return PlayerConfig.get_config(INPUT_SECTION, action_name, default)
+	return PLAYER_CONFIG_SCRIPT.get_config(INPUT_SECTION, action_name, default)
 
 static func set_config_input_events(action_name : String, inputs : Array) -> void:
-	PlayerConfig.set_config(INPUT_SECTION, action_name, inputs)
+	PLAYER_CONFIG_SCRIPT.set_config(INPUT_SECTION, action_name, inputs)
 
 static func _clear_config_input_events() -> void:
-	PlayerConfig.erase_section(INPUT_SECTION)
+	PLAYER_CONFIG_SCRIPT.erase_section(INPUT_SECTION)
 
 static func remove_action_input_event(action_name : String, input_event : InputEvent) -> void:
 	InputMap.action_erase_event(action_name, input_event)
@@ -42,7 +44,7 @@ static func set_input_from_config(action_name : String) -> void:
 	if config_events == action_events:
 		return
 	if config_events.is_empty():
-		PlayerConfig.erase_section_key(INPUT_SECTION, action_name)
+		PLAYER_CONFIG_SCRIPT.erase_section_key(INPUT_SECTION, action_name)
 		return
 	InputMap.action_erase_events(action_name)
 	for config_event in config_events:
@@ -112,13 +114,13 @@ static func set_audio_from_config() -> void:
 		var bus_key : String = get_audio_bus_name(bus_iter).to_pascal_case()
 		var bus_volume : float = get_bus_volume(bus_iter)
 		initial_bus_volumes.append(bus_volume)
-		bus_volume = PlayerConfig.get_config(AUDIO_SECTION, bus_key, bus_volume)
+		bus_volume = PLAYER_CONFIG_SCRIPT.get_config(AUDIO_SECTION, bus_key, bus_volume)
 		if is_nan(bus_volume):
 			bus_volume = 1.0
-			PlayerConfig.set_config(AUDIO_SECTION, bus_key, bus_volume)
+			PLAYER_CONFIG_SCRIPT.set_config(AUDIO_SECTION, bus_key, bus_volume)
 		set_bus_volume(bus_iter, bus_volume)
 	var mute_audio_flag : bool = is_muted()
-	mute_audio_flag = PlayerConfig.get_config(AUDIO_SECTION, MUTE_SETTING, mute_audio_flag)
+	mute_audio_flag = PLAYER_CONFIG_SCRIPT.get_config(AUDIO_SECTION, MUTE_SETTING, mute_audio_flag)
 	set_mute(mute_audio_flag)
 
 # Video
@@ -131,21 +133,21 @@ static func set_resolution(value : Vector2i, window : Window, update_config : bo
 		return
 	window.size = value
 	if update_config:
-		PlayerConfig.set_config(VIDEO_SECTION, SCREEN_RESOLUTION, value)
+		PLAYER_CONFIG_SCRIPT.set_config(VIDEO_SECTION, SCREEN_RESOLUTION, value)
 
 static func is_fullscreen(window : Window) -> bool:
 	return (window.mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (window.mode == Window.MODE_FULLSCREEN)
 
 static func get_resolution(window : Window) -> Vector2i:
 	var current_resolution : Vector2i = window.size
-	return PlayerConfig.get_config(VIDEO_SECTION, SCREEN_RESOLUTION, current_resolution)
+	return PLAYER_CONFIG_SCRIPT.get_config(VIDEO_SECTION, SCREEN_RESOLUTION, current_resolution)
 
 static func _on_window_size_changed(window: Window) -> void:
-	PlayerConfig.set_config(VIDEO_SECTION, SCREEN_RESOLUTION, window.size)
+	PLAYER_CONFIG_SCRIPT.set_config(VIDEO_SECTION, SCREEN_RESOLUTION, window.size)
 
 static func _set_fullscreen_from_config(window: Window) -> bool:
 	var fullscreen_enabled : bool = is_fullscreen(window)
-	fullscreen_enabled = PlayerConfig.get_config(VIDEO_SECTION, FULLSCREEN, fullscreen_enabled)
+	fullscreen_enabled = PLAYER_CONFIG_SCRIPT.get_config(VIDEO_SECTION, FULLSCREEN, fullscreen_enabled)
 	set_fullscreen_enabled(fullscreen_enabled, window)
 	return fullscreen_enabled
 
@@ -164,7 +166,7 @@ static func get_vsync(window : Window = null) -> DisplayServer.VSyncMode:
 
 static func _set_v_sync_from_config(window: Window) -> DisplayServer.VSyncMode:
 	var vsync := get_vsync(window)
-	vsync = PlayerConfig.get_config(VIDEO_SECTION, V_SYNC, vsync)
+	vsync = PLAYER_CONFIG_SCRIPT.get_config(VIDEO_SECTION, V_SYNC, vsync)
 	set_vsync(vsync)
 	return vsync
 

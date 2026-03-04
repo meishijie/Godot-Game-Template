@@ -9,13 +9,13 @@ extends Node
 ## With a scene lister, it will instead traverse through levels linearly.
 
 ## Required reference to a level loader in the scene.
-@export var level_loader : LevelLoader
+@export var level_loader : Node
 ## Optional path to a starting level scene.
 ## Required if there is no scene lister.
 @export_file var starting_level_path : String
 ## Optional reference to a scene lister in the scene.
 ## Required if there is no starting level path.
-@export var scene_lister : SceneLister
+@export var scene_lister : Node
 ## Whether to load the starting level when ready.
 @export var auto_load : bool = true
 @export_group("Scenes")

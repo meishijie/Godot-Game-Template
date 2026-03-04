@@ -3,6 +3,9 @@ class_name OptionControl
 extends Control
 ## Generic scene for editing a value of the [PlayerConfig].
 
+const APP_SETTINGS_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/config/app_settings.gd")
+const PLAYER_CONFIG_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/config/player_config.gd")
+
 signal setting_changed(value)
 
 enum OptionSections{
@@ -15,14 +18,14 @@ enum OptionSections{
 	CUSTOM,
 }
 
-const OptionSectionNames : Dictionary = {
+var option_section_names : Dictionary = {
 	OptionSections.NONE : "",
-	OptionSections.INPUT : AppSettings.INPUT_SECTION,
-	OptionSections.AUDIO : AppSettings.AUDIO_SECTION,
-	OptionSections.VIDEO : AppSettings.VIDEO_SECTION,
-	OptionSections.GAME : AppSettings.GAME_SECTION,
-	OptionSections.APPLICATION : AppSettings.APPLICATION_SECTION,
-	OptionSections.CUSTOM : AppSettings.CUSTOM_SECTION,
+	OptionSections.INPUT : APP_SETTINGS_SCRIPT.INPUT_SECTION,
+	OptionSections.AUDIO : APP_SETTINGS_SCRIPT.AUDIO_SECTION,
+	OptionSections.VIDEO : APP_SETTINGS_SCRIPT.VIDEO_SECTION,
+	OptionSections.GAME : APP_SETTINGS_SCRIPT.GAME_SECTION,
+	OptionSections.APPLICATION : APP_SETTINGS_SCRIPT.APPLICATION_SECTION,
+	OptionSections.CUSTOM : APP_SETTINGS_SCRIPT.CUSTOM_SECTION,
 }
 
 ## Locks config names in case of issues with inherited scenes.
@@ -40,10 +43,10 @@ const OptionSectionNames : Dictionary = {
 ## Defines what section in the config file this option belongs under.
 @export var option_section : OptionSections :
 	set(value):
-		var _update_config : bool = OptionSectionNames[option_section] == section and not lock_config_names
+		var _update_config : bool = option_section_names[option_section] == section and not lock_config_names
 		option_section = value
 		if _update_config:
-			section = OptionSectionNames[option_section]
+			section = option_section_names[option_section]
 
 @export_group("Config Names")
 ## Defines the key for this option variable in the config file.
@@ -65,11 +68,11 @@ var _connected_nodes : Array
 
 func _on_setting_changed(value) -> void:
 	if Engine.is_editor_hint(): return
-	PlayerConfig.set_config(section, key, value)
+	PLAYER_CONFIG_SCRIPT.set_config(section, key, value)
 	setting_changed.emit(value)
 
 func _get_setting(default : Variant = null) -> Variant:
-	return PlayerConfig.get_config(section, key, default)
+	return PLAYER_CONFIG_SCRIPT.get_config(section, key, default)
 
 func _connect_option_inputs(node) -> void:
 	if node in _connected_nodes: return

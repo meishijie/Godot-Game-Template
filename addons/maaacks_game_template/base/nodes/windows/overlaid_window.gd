@@ -1,6 +1,6 @@
 @tool
 class_name OverlaidWindow
-extends WindowContainer
+extends "res://addons/maaacks_game_template/base/nodes/windows/window_container.gd"
 
 @export var pauses_game : bool = false :
 	set(value):

@@ -1,4 +1,4 @@
-extends MainMenu
+extends "res://addons/maaacks_game_template/base/nodes/menus/main_menu/main_menu.gd"
 ## Main menu extension that adds options and animates the title and menu fading in.
 ## The scene adds a 'Continue' button if a game is in progress.
 ## The animation can be skipped by the player with any input.

@@ -1,4 +1,6 @@
 extends "res://addons/maaacks_game_template/base/nodes/menus/options_menu/mini_options_menu.gd"
 
+const GAME_STATE_SCRIPT := preload("res://scripts/game_state.gd")
+
 func _on_reset_game_control_reset_confirmed() -> void:
-	GameState.reset()
+	GAME_STATE_SCRIPT.reset()

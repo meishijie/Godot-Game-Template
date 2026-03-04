@@ -1,6 +1,8 @@
 @tool
 class_name InputIconMapper
-extends FileLister
+extends "res://addons/maaacks_game_template/base/nodes/utilities/file_lister.gd"
+
+const INPUT_EVENT_HELPER_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/utilities/input_helper.gd")
 
 signal joypad_device_changed
 
@@ -22,7 +24,7 @@ const COMMON_REPLACE_STRINGS: Dictionary = {
 @export var filtered_strings : Array[String]
 ## Adds entries for "Up", "Down", "Left", "Right" to icon names ending with "Stick".
 @export var add_stick_directions : bool = false
-@export var intial_joypad_device : String = InputEventHelper.DEVICE_GENERIC
+@export var intial_joypad_device : String = INPUT_EVENT_HELPER_SCRIPT.DEVICE_GENERIC
 ## Attempt to match the icon names to the input names based on the string rules.
 @export var _match_icons_to_inputs_action : bool = false :
 	set(value):
@@ -115,7 +117,7 @@ func _match_icons_to_inputs() -> void:
 		_match_icon_to_file(file)
 
 func get_icon(input_event : InputEvent) -> Texture:
-	var specific_text = InputEventHelper.get_device_specific_text(input_event, last_joypad_device)
+	var specific_text = INPUT_EVENT_HELPER_SCRIPT.get_device_specific_text(input_event, last_joypad_device)
 	if specific_text in matching_icons:
 		return matching_icons[specific_text]
 	return null
@@ -124,11 +126,11 @@ func _assign_joypad_0_to_last() -> void:
 	if last_joypad_device != intial_joypad_device : return
 	var connected_joypads := Input.get_connected_joypads()
 	if connected_joypads.is_empty(): return
-	last_joypad_device = InputEventHelper.get_device_name_by_id(connected_joypads[0])
+	last_joypad_device = INPUT_EVENT_HELPER_SCRIPT.get_device_name_by_id(connected_joypads[0])
 
 func _input(event : InputEvent) -> void:
-	var device_name = InputEventHelper.get_device_name(event)
-	if device_name != InputEventHelper.DEVICE_GENERIC and device_name != last_joypad_device:
+	var device_name = INPUT_EVENT_HELPER_SCRIPT.get_device_name(event)
+	if device_name != INPUT_EVENT_HELPER_SCRIPT.DEVICE_GENERIC and device_name != last_joypad_device:
 		last_joypad_device = device_name
 		joypad_device_changed.emit()
 

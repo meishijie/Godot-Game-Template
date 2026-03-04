@@ -1,4 +1,4 @@
-extends LoadingScreen
+extends "res://addons/maaacks_game_template/base/nodes/loading_screen/loading_screen.gd"
 ## Loading Screen extension that pre-loads shaders before opening the next scene.
 
 ## Path to directory with the material shaders that should be pre-loaded.
