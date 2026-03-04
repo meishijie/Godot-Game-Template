@@ -129,16 +129,7 @@ func _show_next_image(animated : bool = true) -> void:
 	next_image_index += 1
 	_wait_and_fade_out(texture_rect)
 
-func _preload_next_scene_for_headless() -> void:
-	var path_to_preload := get_next_scene_path()
-	if path_to_preload.is_empty():
-		return
-	ResourceLoader.load(path_to_preload)
-
 func _ready() -> void:
-	if DisplayServer.get_name() == "headless":
-		_preload_next_scene_for_headless()
-		return
 	var scene_loader := _get_scene_loader()
 	if scene_loader:
 		scene_loader.load_scene(get_next_scene_path(), true)

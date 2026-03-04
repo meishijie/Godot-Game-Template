@@ -97,6 +97,10 @@ func load_scene(scene_path : String, in_background : bool = false) -> void:
 		return
 	_scene_path = scene_path
 	_background_loading = in_background
+	if _background_loading and DisplayServer.get_name() == "headless":
+		_loaded_resource = ResourceLoader.load(_scene_path)
+		call_deferred("emit_signal", "scene_loaded")
+		return
 	if ResourceLoader.has_cached(_scene_path):
 		call_deferred("emit_signal", "scene_loaded")
 		if not _background_loading:
