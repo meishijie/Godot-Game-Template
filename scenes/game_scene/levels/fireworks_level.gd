@@ -39,6 +39,10 @@ const PARTICLE_LIFETIME_MIN := 0.35
 const PARTICLE_LIFETIME_MAX := 0.75
 const PARTICLE_SPEED_MIN := 90.0
 const PARTICLE_SPEED_MAX := 300.0
+const TYPE_BURST := &"burst"
+const TYPE_RING := &"ring"
+const TYPE_PALM := &"palm"
+const FIREWORK_TYPE_ORDER : Array[StringName] = [TYPE_BURST, TYPE_RING, TYPE_PALM]
 const FEEDBACK_LIFETIME := 0.6
 const BACKGROUND_COLOR := Color(0.04, 0.04, 0.1, 1.0)
 const BACKGROUND_TOP_COLOR := Color(0.07, 0.05, 0.2, 1.0)
@@ -55,6 +59,7 @@ var _spawn_interval : float = 0.0
 var _level_finished : bool = false
 var _feedback_time_left : float = 0.0
 var _perfect_line_y : float = 0.0
+var _next_firework_type_index : int = 0
 
 @onready var _title_label : Label = %TitleLabel
 @onready var _objective_label : Label = %ObjectiveLabel
@@ -72,7 +77,7 @@ func _ready() -> void:
 	_spawn_timer = 0.25
 	_title_label.text = level_title
 	_objective_label.text = level_description
-	_hint_label.text = "Target %d points in %ds. Left click rockets near the guide line." % [target_score, int(round(level_duration_seconds))]
+	_hint_label.text = "Target %d points in %ds. Burst -> Ring -> Palm cycle." % [target_score, int(round(level_duration_seconds))]
 	_progress_bar.max_value = max(target_score, 1)
 	_update_perfect_line()
 	_update_hud()
@@ -124,8 +129,9 @@ func _update_fireworks(delta : float) -> void:
 		firework["position"] += firework["velocity"] * delta
 		firework["age"] += delta
 		var trail : Array[Vector2] = firework["trail"]
+		var trail_limit : int = firework.get("trail_limit", TRAIL_LENGTH)
 		trail.push_back(firework["position"])
-		if trail.size() > TRAIL_LENGTH:
+		if trail.size() > trail_limit:
 			trail.pop_front()
 		if firework["position"].y < rocket_escape_y:
 			firework["alive"] = false
@@ -138,8 +144,10 @@ func _update_particles(delta : float) -> void:
 		if particle["life"] <= 0.0:
 			continue
 		var velocity : Vector2 = particle["velocity"]
-		velocity *= 0.98
-		velocity.y += 180.0 * delta
+		var drag : float = particle.get("drag", 0.98)
+		var gravity_scale : float = particle.get("gravity_scale", 1.0)
+		velocity *= drag
+		velocity.y += 180.0 * gravity_scale * delta
 		particle["velocity"] = velocity
 		particle["position"] += velocity * delta
 	_particles = _particles.filter(func(particle : Dictionary) -> bool: return particle["life"] > 0.0)
@@ -162,14 +170,17 @@ func _get_active_fireworks_count() -> int:
 func _spawn_firework() -> void:
 	var margin := 56.0
 	var x_position := _rng.randf_range(margin, max(margin, size.x - margin))
+	var firework_type := _next_firework_type()
 	var firework := {
 		"position": Vector2(x_position, size.y + 20.0),
 		"velocity": Vector2(
 			_rng.randf_range(-rocket_drift_strength, rocket_drift_strength),
 			-_rng.randf_range(rocket_speed_min, rocket_speed_max)
 		),
-		"color": Color.from_hsv(_rng.randf(), _rng.randf_range(0.6, 0.9), _rng.randf_range(0.85, 1.0)),
+		"color": _pick_firework_color(firework_type),
+		"type": firework_type,
 		"trail": Array[Vector2](),
+		"trail_limit": _trail_length_for_type(firework_type),
 		"alive": true,
 		"age": 0.0,
 	}
@@ -189,8 +200,9 @@ func _try_detonate(click_position : Vector2) -> void:
 		_register_miss("Whiff")
 		return
 	nearest["alive"] = false
+	var firework_type : StringName = nearest["type"]
 	var score_awarded := _score_for_hit(nearest["position"].y)
-	_create_explosion(nearest["position"], nearest["color"], score_awarded == 0)
+	_create_explosion(nearest["position"], nearest["color"], firework_type, score_awarded == 0)
 	if score_awarded > 0:
 		_combo += 1
 		_max_combo = max(_max_combo, _combo)
@@ -198,7 +210,7 @@ func _try_detonate(click_position : Vector2) -> void:
 		var final_score := int(round(score_awarded * combo_multiplier))
 		_score += final_score
 		var quality_text := "Perfect" if score_awarded == perfect_base_score else "Good"
-		_show_feedback("%s +%d" % [quality_text, final_score], Color(0.7, 1.0, 0.8, 1.0))
+		_show_feedback("%s [%s] +%d" % [quality_text, _type_label(firework_type), final_score], Color(0.7, 1.0, 0.8, 1.0))
 	else:
 		_register_miss("Miss")
 	_update_hud()
@@ -222,21 +234,115 @@ func _show_feedback(text : String, color : Color) -> void:
 	_feedback_label.modulate = color
 	_feedback_time_left = FEEDBACK_LIFETIME
 
-func _create_explosion(center : Vector2, color : Color, is_miss : bool) -> void:
+func _create_explosion(center : Vector2, color : Color, firework_type : StringName, is_miss : bool) -> void:
 	var particle_count := PARTICLE_COUNT
 	if is_miss:
 		particle_count = int(PARTICLE_COUNT / 2)
-	for i in particle_count:
+	match firework_type:
+		TYPE_RING:
+			_create_ring_explosion(center, color, particle_count, is_miss)
+		TYPE_PALM:
+			_create_palm_explosion(center, color, particle_count, is_miss)
+		_:
+			_create_burst_explosion(center, color, particle_count)
+
+func _next_firework_type() -> StringName:
+	if FIREWORK_TYPE_ORDER.is_empty():
+		return TYPE_BURST
+	var firework_type : StringName = FIREWORK_TYPE_ORDER[_next_firework_type_index % FIREWORK_TYPE_ORDER.size()]
+	_next_firework_type_index = (_next_firework_type_index + 1) % FIREWORK_TYPE_ORDER.size()
+	return firework_type
+
+func _trail_length_for_type(firework_type : StringName) -> int:
+	match firework_type:
+		TYPE_RING:
+			return TRAIL_LENGTH + 2
+		TYPE_PALM:
+			return TRAIL_LENGTH + 5
+		_:
+			return TRAIL_LENGTH
+
+func _type_label(firework_type : StringName) -> String:
+	match firework_type:
+		TYPE_RING:
+			return "Ring"
+		TYPE_PALM:
+			return "Palm"
+		_:
+			return "Burst"
+
+func _pick_firework_color(firework_type : StringName) -> Color:
+	match firework_type:
+		TYPE_RING:
+			return Color.from_hsv(_rng.randf_range(0.52, 0.67), _rng.randf_range(0.6, 0.9), _rng.randf_range(0.85, 1.0))
+		TYPE_PALM:
+			return Color.from_hsv(_rng.randf_range(0.08, 0.16), _rng.randf_range(0.5, 0.82), _rng.randf_range(0.88, 1.0))
+		_:
+			return Color.from_hsv(_rng.randf_range(0.0, 0.08), _rng.randf_range(0.62, 0.95), _rng.randf_range(0.85, 1.0))
+
+func _create_burst_explosion(center : Vector2, color : Color, particle_count : int) -> void:
+	for _i in range(particle_count):
 		var angle := _rng.randf_range(0.0, TAU)
 		var speed := _rng.randf_range(PARTICLE_SPEED_MIN, PARTICLE_SPEED_MAX)
-		_particles.push_back({
-			"position": center,
-			"velocity": Vector2.RIGHT.rotated(angle) * speed,
-			"life": _rng.randf_range(PARTICLE_LIFETIME_MIN, PARTICLE_LIFETIME_MAX),
-			"max_life": PARTICLE_LIFETIME_MAX,
-			"size": _rng.randf_range(2.5, 5.5),
-			"color": color,
-		})
+		_spawn_particle(
+			center,
+			Vector2.RIGHT.rotated(angle) * speed,
+			color,
+			_rng.randf_range(2.5, 5.5),
+			1.0,
+			0.98
+		)
+
+func _create_ring_explosion(center : Vector2, color : Color, particle_count : int, is_miss : bool) -> void:
+	var gravity_scale := 1.0 if is_miss else 0.75
+	for i in range(particle_count):
+		var ratio := float(i) / float(max(particle_count, 1))
+		var angle := (ratio * TAU) + _rng.randf_range(-0.08, 0.08)
+		var speed := _rng.randf_range(PARTICLE_SPEED_MIN + 55.0, PARTICLE_SPEED_MAX - 40.0)
+		_spawn_particle(
+			center,
+			Vector2.RIGHT.rotated(angle) * speed,
+			color.lightened(_rng.randf_range(0.0, 0.24)),
+			_rng.randf_range(2.2, 4.2),
+			gravity_scale,
+			0.985
+		)
+
+func _create_palm_explosion(center : Vector2, color : Color, particle_count : int, is_miss : bool) -> void:
+	var gravity_scale := 1.75 if not is_miss else 1.3
+	for _i in range(particle_count):
+		var angle := _rng.randf_range(-PI * 0.86, -PI * 0.14)
+		var speed := _rng.randf_range(PARTICLE_SPEED_MIN + 25.0, PARTICLE_SPEED_MAX - 20.0)
+		var velocity := Vector2.RIGHT.rotated(angle) * speed
+		velocity.x *= 0.58
+		_spawn_particle(
+			center,
+			velocity,
+			color.darkened(_rng.randf_range(0.0, 0.2)),
+			_rng.randf_range(2.4, 4.8),
+			gravity_scale,
+			0.97
+		)
+
+func _spawn_particle(
+	center : Vector2,
+	velocity : Vector2,
+	color : Color,
+	size : float,
+	gravity_scale : float,
+	drag : float
+) -> void:
+	var life := _rng.randf_range(PARTICLE_LIFETIME_MIN, PARTICLE_LIFETIME_MAX)
+	_particles.push_back({
+		"position": center,
+		"velocity": velocity,
+		"life": life,
+		"max_life": life,
+		"size": size,
+		"color": color,
+		"gravity_scale": gravity_scale,
+		"drag": drag,
+	})
 
 func _finish_level() -> void:
 	if _level_finished:
@@ -259,6 +365,30 @@ func _update_hud() -> void:
 	_timer_label.text = "Time: %02d" % int(ceil(_time_left))
 	_progress_bar.value = min(_score, target_score)
 
+func _draw_firework_body(position : Vector2, color : Color, firework_type : StringName) -> void:
+	match firework_type:
+		TYPE_RING:
+			draw_rect(
+				Rect2(
+					position - Vector2(ROCKET_RADIUS, ROCKET_RADIUS),
+					Vector2(ROCKET_RADIUS * 2.0, ROCKET_RADIUS * 2.0)
+				),
+				color,
+				true
+			)
+		TYPE_PALM:
+			draw_colored_polygon(
+				PackedVector2Array([
+					position + Vector2(0.0, -ROCKET_RADIUS - 1.0),
+					position + Vector2(ROCKET_RADIUS + 1.0, 0.0),
+					position + Vector2(0.0, ROCKET_RADIUS + 1.0),
+					position + Vector2(-ROCKET_RADIUS - 1.0, 0.0),
+				]),
+				color
+			)
+		_:
+			draw_circle(position, ROCKET_RADIUS, color)
+
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), BACKGROUND_COLOR, true)
 	draw_rect(Rect2(Vector2.ZERO, Vector2(size.x, size.y * 0.45)), BACKGROUND_TOP_COLOR, true)
@@ -270,10 +400,20 @@ func _draw() -> void:
 
 	for firework in _fireworks:
 		var trail : Array[Vector2] = firework["trail"]
+		var firework_type : StringName = firework["type"]
+		var trail_width := 2.0
+		var trail_tint := Color(1.0, 1.0, 1.0, 1.0)
+		match firework_type:
+			TYPE_RING:
+				trail_width = 1.6
+				trail_tint = Color(0.95, 1.0, 1.0, 1.0)
+			TYPE_PALM:
+				trail_width = 2.6
+				trail_tint = Color(0.92, 0.88, 0.8, 1.0)
 		for i in range(1, trail.size()):
 			var alpha := float(i) / float(trail.size())
-			draw_line(trail[i - 1], trail[i], firework["color"] * Color(1, 1, 1, alpha * 0.6), 2.0)
-		draw_circle(firework["position"], ROCKET_RADIUS, firework["color"])
+			draw_line(trail[i - 1], trail[i], firework["color"] * trail_tint * Color(1.0, 1.0, 1.0, alpha * 0.6), trail_width)
+		_draw_firework_body(firework["position"], firework["color"], firework_type)
 
 	for particle in _particles:
 		var life_ratio := clampf(particle["life"] / particle["max_life"], 0.0, 1.0)
