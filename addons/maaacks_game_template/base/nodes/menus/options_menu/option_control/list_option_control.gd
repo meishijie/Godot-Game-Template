@@ -1,6 +1,6 @@
 @tool
 class_name ListOptionControl
-extends OptionControl
+extends "res://addons/maaacks_game_template/base/nodes/menus/options_menu/option_control/option_control.gd"
 
 ## Locks Option Titles from auto-updating when editing Option Values.
 ## Intentionally put first for initialization.

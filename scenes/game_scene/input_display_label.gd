@@ -1,6 +1,8 @@
 extends Label
 
-@onready var action_names := AppSettings.get_action_names()
+const APP_SETTINGS_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/config/app_settings.gd")
+
+@onready var action_names := APP_SETTINGS_SCRIPT.get_action_names()
 
 func _get_inputs_as_string() -> String:
 	var all_inputs : String = ""

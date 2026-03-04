@@ -7,8 +7,10 @@ extends Control
 
 signal level_selected
 
+const GAME_STATE_SCRIPT := preload("res://scripts/game_state.gd")
+
 @onready var level_buttons_container: ItemList = %LevelButtonsContainer
-@onready var scene_lister: SceneLister = $SceneLister
+@onready var scene_lister: Node = $SceneLister
 var level_paths : Array[String]
 
 func _ready() -> void:
@@ -18,7 +20,7 @@ func _ready() -> void:
 func add_levels_to_container() -> void:
 	level_buttons_container.clear()
 	level_paths.clear()
-	var game_state := GameState.get_or_create_state()
+	var game_state := GAME_STATE_SCRIPT.get_or_create_state()
 	for file_path in game_state.level_states.keys():
 		var file_name : String = file_path.get_file()  # e.g., "level_1.tscn"
 		file_name = file_name.trim_suffix(".tscn")  # Remove the ".tscn" extension
@@ -29,5 +31,5 @@ func add_levels_to_container() -> void:
 		level_paths.append(file_path)
 
 func _on_level_buttons_container_item_activated(index: int) -> void:
-	GameState.set_checkpoint_level_path(level_paths[index])
+	GAME_STATE_SCRIPT.set_checkpoint_level_path(level_paths[index])
 	level_selected.emit()

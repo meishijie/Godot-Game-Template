@@ -4,6 +4,7 @@ extends Resource
 const STATE_NAME : String = "GameState"
 const FILE_PATH = "res://scripts/game_state.gd"
 const GLOBAL_STATE_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/state/global_state.gd")
+const LEVEL_STATE_SCRIPT := preload("res://scripts/level_state.gd")
 
 @export var level_states : Dictionary = {}
 @export var current_level_path : String
@@ -12,7 +13,7 @@ const GLOBAL_STATE_SCRIPT := preload("res://addons/maaacks_game_template/base/no
 @export var play_time : int
 @export var total_time : int
 
-static func get_level_state(level_state_key : String) -> LevelState:
+static func get_level_state(level_state_key : String) -> Resource:
 	if not has_game_state(): 
 		return
 	var game_state := get_or_create_state()
@@ -20,7 +21,7 @@ static func get_level_state(level_state_key : String) -> LevelState:
 	if level_state_key in game_state.level_states:
 		return game_state.level_states[level_state_key] 
 	else:
-		var new_level_state := LevelState.new()
+		var new_level_state := LEVEL_STATE_SCRIPT.new()
 		game_state.level_states[level_state_key] = new_level_state
 		GLOBAL_STATE_SCRIPT.save()
 		return new_level_state

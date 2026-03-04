@@ -9,8 +9,9 @@ signal level_changed(level_path : String)
 @export_file("*.tscn") var next_level_path : String
 
 const GLOBAL_STATE_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/state/global_state.gd")
+const GAME_STATE_SCRIPT := preload("res://scripts/game_state.gd")
 
-var level_state : LevelState
+var level_state
 
 func _on_lose_button_pressed() -> void:
 	level_lost.emit()
@@ -24,7 +25,7 @@ func open_tutorials() -> void:
 	GLOBAL_STATE_SCRIPT.save()
 
 func _ready() -> void:
-	level_state = GameState.get_level_state(scene_file_path)
+	level_state = GAME_STATE_SCRIPT.get_level_state(scene_file_path)
 	%ColorPickerButton.color = level_state.color
 	%BackgroundColor.color = level_state.color
 	if not level_state.tutorial_read:

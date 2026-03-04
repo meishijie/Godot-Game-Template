@@ -3,6 +3,9 @@ class_name InputActionsTree
 extends Tree
 ## Scene to list the input actions out in a tree format.
 
+const APP_SETTINGS_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/config/app_settings.gd")
+const INPUT_EVENT_HELPER_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/utilities/input_helper.gd")
+
 signal already_assigned(action_name : String, input_name : String)
 signal minimum_reached(action_name : String)
 signal add_button_clicked(action_name : String)
@@ -40,14 +43,14 @@ signal remove_button_clicked(action_name : String, input_name : String)
 ## Icon for the button that removes an input to an action name.
 @export var remove_button_texture : Texture2D
 ## Optional link to an input icon mapper to replace the text with icons.
-@export var input_icon_mapper : InputIconMapper
+@export var input_icon_mapper : Node
 @export_group("Built-in Actions")
 ## Shows Godot's built-in actions (action names starting with "ui_") in the tree.
 @export var show_built_in_actions : bool = false
 ## Prevents assigning inputs that are already assigned to Godot's built-in actions (action names starting with "ui_"). Not recommended.
 @export var catch_built_in_duplicate_inputs : bool = false
 ## Maps the names of built-in input actions to readable names for users.
-@export var built_in_action_name_map := InputEventHelper.BUILT_IN_ACTION_NAME_MAP
+@export var built_in_action_name_map := INPUT_EVENT_HELPER_SCRIPT.BUILT_IN_ACTION_NAME_MAP
 @export_group("Debug")
 ## Maps the names of input actions to readable names for users.
 @export var action_name_map : Dictionary
@@ -79,7 +82,7 @@ func _add_input_event_as_tree_item(action_name : String, input_event : InputEven
 		icon = input_icon_mapper.get_icon(input_event)
 	if icon:
 		input_tree_item.set_icon(0, icon)
-	input_tree_item.set_text(0, InputEventHelper.get_text(input_event))
+	input_tree_item.set_text(0, INPUT_EVENT_HELPER_SCRIPT.get_text(input_event))
 	if remove_button_texture != null:
 		input_tree_item.add_button(0, remove_button_texture, -1, false, "Remove")
 	tree_item_remove_map[input_tree_item] = input_event
@@ -105,7 +108,7 @@ func _get_all_action_names(include_built_in : bool = false) -> Array[StringName]
 			if action_name is StringName:
 				action_names.append(action_name)
 	if show_all_actions:
-		var all_actions := AppSettings.get_action_names(include_built_in)
+		var all_actions := APP_SETTINGS_SCRIPT.get_action_names(include_built_in)
 		for action_name in all_actions:
 			if not action_name in action_names:
 				action_names.append(action_name)
@@ -135,24 +138,24 @@ func _build_ui_tree() -> void:
 		_add_action_as_tree_item(readable_name, action_name, input_events)
 
 func _assign_input_event(input_event : InputEvent, action_name : String) -> void:
-	assigned_input_events[InputEventHelper.get_text(input_event)] = action_name
+	assigned_input_events[INPUT_EVENT_HELPER_SCRIPT.get_text(input_event)] = action_name
 		
 func _assign_input_event_to_action(input_event : InputEvent, action_name : String) -> void:
 	_assign_input_event(input_event, action_name)
 	InputMap.action_add_event(action_name, input_event)
 	var action_events = InputMap.action_get_events(action_name)
-	AppSettings.set_config_input_events(action_name, action_events)
+	APP_SETTINGS_SCRIPT.set_config_input_events(action_name, action_events)
 	_add_input_event_as_tree_item(action_name, input_event, editing_item)
 
 func _can_remove_input_event(action_name : String) -> bool:
 	return InputMap.action_get_events(action_name).size() > 1
 
 func _remove_input_event(input_event : InputEvent) -> void:
-	assigned_input_events.erase(InputEventHelper.get_text(input_event))
+	assigned_input_events.erase(INPUT_EVENT_HELPER_SCRIPT.get_text(input_event))
 
 func _remove_input_event_from_action(input_event : InputEvent, action_name : String) -> void:
 	_remove_input_event(input_event)
-	AppSettings.remove_action_input_event(action_name, input_event)
+	APP_SETTINGS_SCRIPT.remove_action_input_event(action_name, input_event)
 
 func _build_assigned_input_events() -> void:
 	assigned_input_events.clear()
@@ -163,8 +166,8 @@ func _build_assigned_input_events() -> void:
 			_assign_input_event(input_event, action_name)
 
 func _get_action_for_input_event(input_event : InputEvent) -> String:
-	if InputEventHelper.get_text(input_event) in assigned_input_events:
-		return assigned_input_events[InputEventHelper.get_text(input_event)] 
+	if INPUT_EVENT_HELPER_SCRIPT.get_text(input_event) in assigned_input_events:
+		return assigned_input_events[INPUT_EVENT_HELPER_SCRIPT.get_text(input_event)] 
 	return ""
 
 func add_action_event(last_input_text : String, last_input_event : InputEvent):
@@ -192,7 +195,7 @@ func remove_action_event(item : TreeItem) -> void:
 	parent_tree_item.remove_child(item)
 
 func reset() -> void:
-	AppSettings.reset_to_default_inputs()
+	APP_SETTINGS_SCRIPT.reset_to_default_inputs()
 	_build_assigned_input_events()
 	_build_ui_tree()
 

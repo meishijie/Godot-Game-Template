@@ -1,6 +1,6 @@
 @tool
 class_name Vector2ListOptionControl
-extends ListOptionControl
+extends "res://addons/maaacks_game_template/base/nodes/menus/options_menu/option_control/list_option_control.gd"
 
 func _value_title_map(value : Variant) -> String:
 	if value is Vector2 or value is Vector2i:

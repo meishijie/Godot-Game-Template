@@ -3,6 +3,9 @@ class_name InputActionsList
 extends Container
 ## Scene to list the input actions out as buttons in a grid format.
 
+const APP_SETTINGS_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/config/app_settings.gd")
+const INPUT_EVENT_HELPER_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/utilities/input_helper.gd")
+
 const EMPTY_INPUT_ACTION_STRING = " "
 
 signal already_assigned(action_name : String, input_name : String)
@@ -51,7 +54,7 @@ const BUTTON_NAME_GROUP_STRING : String = "%s:%d"
 @export var button_minimum_size : Vector2
 @export_group("Icons")
 ## Optional link to an input icon mapper to replace the text with icons.
-@export var input_icon_mapper : InputIconMapper
+@export var input_icon_mapper : Node
 ## If true, expand the icons to fill the buttons.
 @export var expand_icon : bool = false
 @export_group("Built-in Actions")
@@ -60,7 +63,7 @@ const BUTTON_NAME_GROUP_STRING : String = "%s:%d"
 ## Prevents assigning inputs that are already assigned to Godot's built-in actions (action names starting with "ui_"). Not recommended.
 @export var catch_built_in_duplicate_inputs : bool = false
 ## Maps the names of built-in input actions to readable names for users.
-@export var built_in_action_name_map := InputEventHelper.BUILT_IN_ACTION_NAME_MAP
+@export var built_in_action_name_map := INPUT_EVENT_HELPER_SCRIPT.BUILT_IN_ACTION_NAME_MAP
 @export_group("Debug")
 ## Maps the names of input actions to readable names for users.
 @export var action_name_map : Dictionary
@@ -145,7 +148,7 @@ func _update_next_button_disabled_state(action_name : String, action_group : int
 		button.disabled = disabled
 
 func _update_assigned_inputs_and_button(action_name : String, action_group : int, input_event : InputEvent) -> void:
-	var new_readable_input_name = InputEventHelper.get_text(input_event)
+	var new_readable_input_name = INPUT_EVENT_HELPER_SCRIPT.get_text(input_event)
 	var button = _get_button_by_action(action_name, action_group)
 	if not button: return
 	var icon : Texture
@@ -214,7 +217,7 @@ func _add_action_options(action_name : String, readable_action_name : String, in
 		var input_event : InputEvent
 		if group_iter < input_events.size():
 			input_event = input_events[group_iter]
-		var text = InputEventHelper.get_text(input_event)
+		var text = INPUT_EVENT_HELPER_SCRIPT.get_text(input_event)
 		var is_disabled = group_iter > input_events.size()
 		if text.is_empty(): text = EMPTY_INPUT_ACTION_STRING
 		var icon : Texture
@@ -235,7 +238,7 @@ func _get_all_action_names(include_built_in : bool = false) -> Array[StringName]
 			if action_name is StringName:
 				action_names.append(action_name)
 	if show_all_actions:
-		var all_actions := AppSettings.get_action_names(include_built_in)
+		var all_actions := APP_SETTINGS_SCRIPT.get_action_names(include_built_in)
 		for action_name in all_actions:
 			if not action_name in action_names:
 				action_names.append(action_name)
@@ -266,7 +269,7 @@ func _build_ui_list() -> void:
 		_add_action_options(action_name, readable_name, input_events)
 
 func _assign_input_event(input_event : InputEvent, action_name : String) -> void:
-	assigned_input_events[InputEventHelper.get_text(input_event)] = action_name
+	assigned_input_events[INPUT_EVENT_HELPER_SCRIPT.get_text(input_event)] = action_name
 		
 func _assign_input_event_to_action_group(input_event : InputEvent, action_name : String, action_group : int) -> void:
 	_assign_input_event(input_event, action_name)
@@ -279,7 +282,7 @@ func _assign_input_event_to_action_group(input_event : InputEvent, action_name :
 		if input_action_event == null: continue
 		final_action_events.append(input_action_event)
 		InputMap.action_add_event(action_name, input_action_event)
-	AppSettings.set_config_input_events(action_name, final_action_events)
+	APP_SETTINGS_SCRIPT.set_config_input_events(action_name, final_action_events)
 	action_group = min(action_group, final_action_events.size() - 1)
 	_update_assigned_inputs_and_button(action_name, action_group, input_event)
 	_update_next_button_disabled_state(action_name, action_group)
@@ -293,8 +296,8 @@ func _build_assigned_input_events() -> void:
 			_assign_input_event(input_event, action_name)
 
 func _get_action_for_input_event(input_event : InputEvent) -> String:
-	if InputEventHelper.get_text(input_event) in assigned_input_events:
-		return assigned_input_events[InputEventHelper.get_text(input_event)] 
+	if INPUT_EVENT_HELPER_SCRIPT.get_text(input_event) in assigned_input_events:
+		return assigned_input_events[INPUT_EVENT_HELPER_SCRIPT.get_text(input_event)] 
 	return ""
 
 func add_action_event(last_input_text : String, last_input_event : InputEvent) -> void:
@@ -335,7 +338,7 @@ func _set_action_box_container_size() -> void:
 		%ActionBoxContainer.size_flags_vertical = SIZE_EXPAND_FILL
 
 func reset() -> void:
-	AppSettings.reset_to_default_inputs()
+	APP_SETTINGS_SCRIPT.reset_to_default_inputs()
 	_build_assigned_input_events()
 	_refresh_ui_list_button_content()
 

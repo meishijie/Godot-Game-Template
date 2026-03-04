@@ -1,6 +1,6 @@
 @tool
 class_name ConfirmationOverlaidWindow
-extends OverlaidWindow
+extends "res://addons/maaacks_game_template/base/nodes/windows/overlaid_window.gd"
 
 signal confirmed
 
