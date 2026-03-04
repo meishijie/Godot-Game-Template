@@ -1,5 +1,7 @@
 extends Node
 
+const GLOBAL_STATE_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/state/global_state.gd")
+
 var play_time : int
 var total_time : int
 
@@ -24,4 +26,4 @@ func _exit_tree() -> void:
 	var game_state := GameState.get_or_create_state()
 	game_state.play_time += play_time
 	game_state.total_time += total_time
-	GlobalState.save()
+	GLOBAL_STATE_SCRIPT.save()

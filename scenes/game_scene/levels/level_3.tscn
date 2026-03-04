@@ -1,10 +1,6 @@
 [gd_scene format=3 uid="uid://rpyqx1valdin"]
 
-[ext_resource type="Script" uid="uid://qi4qdfy4cte8" path="res://scenes/game_scene/levels/level.gd" id="1_3s8h5"]
-[ext_resource type="Script" uid="uid://1nf36h0gms3q" path="res://addons/maaacks_game_template/base/nodes/utilities/capture_focus.gd" id="2_satlj"]
-[ext_resource type="Script" uid="uid://ch8aaykixbwn5" path="res://scenes/game_scene/input_display_label.gd" id="3_4popk"]
-[ext_resource type="Script" uid="uid://bll85ag2um7hl" path="res://scenes/game_scene/tutorial_manager.gd" id="4_mdq82"]
-[ext_resource type="PackedScene" uid="uid://b444n7xu3j48v" path="res://scenes/game_scene/tutorials/tutorial_3.tscn" id="5_32y40"]
+[ext_resource type="Script" path="res://scenes/game_scene/levels/fireworks_level.gd" id="1_kygtf"]
 
 [node name="Level3" type="Control" unique_id=1059866362]
 layout_mode = 3
@@ -13,100 +9,108 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_3s8h5")
+script = ExtResource("1_kygtf")
+next_level_path = ""
+level_title = "Grand Finale"
+level_description = "Maximum launch pressure. Chain perfect hits to survive."
+level_duration_seconds = 58.0
+target_score = 8600
+max_active_fireworks = 6
+spawn_interval_base = 0.78
+spawn_interval_floor = 0.24
+spawn_acceleration = 0.016
+rocket_speed_min = 340.0
+rocket_speed_max = 520.0
+rocket_drift_strength = 130.0
+perfect_window_px = 24.0
+good_window_px = 64.0
+miss_penalty = 60
+combo_bonus_step = 0.25
+combo_bonus_max = 3.0
 
-[node name="BackgroundColor" type="ColorRect" parent="." unique_id=2124144136]
-unique_name_in_owner = true
+[node name="HUDMargin" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 1)
+mouse_filter = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
 
-[node name="MarginContainer" type="MarginContainer" parent="." unique_id=314123915]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 32
-theme_override_constants/margin_right = 32
-theme_override_constants/margin_bottom = 32
+[node name="HUDPanel" type="PanelContainer" parent="HUDMargin"]
+layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=411813237]
+[node name="HUDVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TopRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer" unique_id=96118221]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "Example Level #3"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=676758029]
-layout_mode = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=356384766]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 32
-script = ExtResource("2_satlj")
-
-[node name="WinButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer" unique_id=2002907296]
+[node name="LeftVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Win"
+theme_override_constants/separation = 3
 
-[node name="LoseButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer" unique_id=38286676]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Lose"
-
-[node name="LoseButton2" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer" unique_id=1680020676]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Lose"
-
-[node name="LoseButton3" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer" unique_id=46286560]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Lose"
-
-[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1286584835]
-layout_mode = 2
-
-[node name="TutorialButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer2" unique_id=1726909010]
-layout_mode = 2
-text = "Tutorial"
-
-[node name="InputDisplayLabel" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer2" unique_id=1112709942]
-layout_mode = 2
-size_flags_horizontal = 3
-horizontal_alignment = 1
-script = ExtResource("3_4popk")
-
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer2" unique_id=209057626]
-layout_mode = 2
-text = "Change Level Color: "
-
-[node name="ColorPickerButton" type="ColorPickerButton" parent="MarginContainer/VBoxContainer/HBoxContainer2" unique_id=879642147]
+[node name="TitleLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Change Color"
+theme_override_font_sizes/font_size = 30
+text = "Grand Finale"
 
-[node name="TutorialManager" type="Node" parent="." unique_id=125994400]
+[node name="ObjectiveLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox"]
 unique_name_in_owner = true
-script = ExtResource("4_mdq82")
-tutorial_scenes = Array[PackedScene]([ExtResource("5_32y40")])
+layout_mode = 2
+text = "Maximum launch pressure. Chain perfect hits to survive."
 
-[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/WinButton" to="." method="_on_win_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/LoseButton" to="." method="_on_lose_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/LoseButton2" to="." method="_on_lose_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/LoseButton3" to="." method="_on_lose_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer2/TutorialButton" to="." method="_on_tutorial_button_pressed"]
-[connection signal="color_changed" from="MarginContainer/VBoxContainer/HBoxContainer2/ColorPickerButton" to="." method="_on_color_picker_button_color_changed"]
+[node name="RightVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="ScoreLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 2
+text = "Score: 0 / 8600"
+
+[node name="ComboLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 2
+text = "Combo: x0"
+
+[node name="TimerLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 2
+text = "Time: 58"
+
+[node name="ScoreProgressBar" type="ProgressBar" parent="HUDMargin/HUDPanel/HUDVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+show_percentage = false
+max_value = 8600.0
+value = 0.0
+
+[node name="BottomRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HintLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Target 8600 points in 58s. Left click rockets near the guide line."
+
+[node name="FeedbackLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 22
+text = "Ready"

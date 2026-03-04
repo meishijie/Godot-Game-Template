@@ -10,6 +10,7 @@ extends Node
 const BLEND_BUS_PREFIX : String = "Blend"
 const MAX_DEPTH = 16
 const MINIMUM_VOLUME_DB = -80
+const APP_SETTINGS_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/config/app_settings.gd")
 
 ## Detect stream players with matching audio bus.
 @export var audio_bus : StringName = &"Music"
@@ -171,7 +172,7 @@ func _on_added_music_player(node: Node) -> void:
 func _enter_tree() -> void:
 	AudioServer.add_bus()
 	blend_audio_bus_idx = AudioServer.bus_count - 1
-	blend_audio_bus = AppSettings.SYSTEM_BUS_NAME_PREFIX + BLEND_BUS_PREFIX + audio_bus
+	blend_audio_bus = APP_SETTINGS_SCRIPT.SYSTEM_BUS_NAME_PREFIX + BLEND_BUS_PREFIX + audio_bus
 	AudioServer.set_bus_send(blend_audio_bus_idx, audio_bus)
 	AudioServer.set_bus_name(blend_audio_bus_idx, blend_audio_bus)
 	var tree_node = get_tree()

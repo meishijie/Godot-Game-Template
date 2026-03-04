@@ -3,6 +3,7 @@ extends Resource
 
 const STATE_NAME : String = "GameState"
 const FILE_PATH = "res://scripts/game_state.gd"
+const GLOBAL_STATE_SCRIPT := preload("res://addons/maaacks_game_template/base/nodes/state/global_state.gd")
 
 @export var level_states : Dictionary = {}
 @export var current_level_path : String
@@ -21,14 +22,14 @@ static func get_level_state(level_state_key : String) -> LevelState:
 	else:
 		var new_level_state := LevelState.new()
 		game_state.level_states[level_state_key] = new_level_state
-		GlobalState.save()
+		GLOBAL_STATE_SCRIPT.save()
 		return new_level_state
 
 static func has_game_state() -> bool:
-	return GlobalState.has_state(STATE_NAME)
+	return GLOBAL_STATE_SCRIPT.has_state(STATE_NAME)
 
 static func get_or_create_state() -> GameState:
-	return GlobalState.get_or_create_state(STATE_NAME, FILE_PATH)
+	return GLOBAL_STATE_SCRIPT.get_or_create_state(STATE_NAME, FILE_PATH)
 
 static func get_current_level_path() -> String:
 	if not has_game_state(): 
@@ -52,22 +53,22 @@ static func set_checkpoint_level_path(level_path : String) -> void:
 	var game_state := get_or_create_state()
 	game_state.checkpoint_level_path = level_path
 	get_level_state(level_path)
-	GlobalState.save()
+	GLOBAL_STATE_SCRIPT.save()
 
 static func set_current_level_path(level_path : String) -> void:
 	var game_state := get_or_create_state()
 	game_state.current_level_path = level_path
-	GlobalState.save()
+	GLOBAL_STATE_SCRIPT.save()
 
 static func start_game() -> void:
 	var game_state := get_or_create_state()
 	game_state.total_games_played += 1
-	GlobalState.save()
+	GLOBAL_STATE_SCRIPT.save()
 
 static func continue_game() -> void:
 	var game_state := get_or_create_state()
 	game_state.current_level_path = game_state.checkpoint_level_path
-	GlobalState.save()
+	GLOBAL_STATE_SCRIPT.save()
 
 static func reset() -> void:
 	var game_state := get_or_create_state()
@@ -76,4 +77,4 @@ static func reset() -> void:
 	game_state.checkpoint_level_path = ""
 	game_state.play_time = 0
 	game_state.total_time = 0
-	GlobalState.save()
+	GLOBAL_STATE_SCRIPT.save()

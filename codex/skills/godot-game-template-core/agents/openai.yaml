@@ -1,0 +1,3 @@
+display_name: Godot Template Core
+short_description: Implement and wire gameplay in this Maaack template safely.
+default_prompt: Implement this feature in the project scenes/scripts while preserving Maaack template flow and level signals.
