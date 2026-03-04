@@ -24,22 +24,37 @@ extends Control
 var tween : Tween
 var next_image_index : int = 0
 
+func _get_app_config() -> Node:
+	return get_node_or_null("/root/AppConfig")
+
+func _get_scene_loader() -> Node:
+	return get_node_or_null("/root/SceneLoader")
+
 func get_next_scene_path() -> String:
 	if next_scene_path.is_empty():
-		return AppConfig.main_menu_scene_path
+		var app_config := _get_app_config()
+		if app_config:
+			var configured_main_menu_path = app_config.get("main_menu_scene_path")
+			if configured_main_menu_path is String:
+				return configured_main_menu_path
 	return next_scene_path
 
 func _on_scene_loaded() -> void:
-		SceneLoader.change_scene_to_resource()
+	var scene_loader := _get_scene_loader()
+	if scene_loader:
+		scene_loader.change_scene_to_resource()
 
 func _load_next_scene() -> void:
-	var status = SceneLoader.get_status()
+	var scene_loader := _get_scene_loader()
+	if scene_loader == null:
+		return
+	var status = scene_loader.get_status()
 	if status == ResourceLoader.THREAD_LOAD_LOADED:
 		_on_scene_loaded()
 	elif show_loading_screen:
-		SceneLoader.change_scene_to_loading_screen()
-	elif not SceneLoader.scene_loaded.is_connected(_on_scene_loaded):
-		SceneLoader.scene_loaded.connect(_on_scene_loaded, CONNECT_ONE_SHOT)
+		scene_loader.change_scene_to_loading_screen()
+	elif scene_loader.has_signal("scene_loaded") and not scene_loader.scene_loaded.is_connected(_on_scene_loaded):
+		scene_loader.scene_loaded.connect(_on_scene_loaded, CONNECT_ONE_SHOT)
 
 func _add_textures_to_container(textures : Array[Texture2D]) -> void:
 	for texture in textures:
@@ -114,9 +129,18 @@ func _show_next_image(animated : bool = true) -> void:
 	next_image_index += 1
 	_wait_and_fade_out(texture_rect)
 
+func _preload_next_scene_for_headless() -> void:
+	var path_to_preload := get_next_scene_path()
+	if path_to_preload.is_empty():
+		return
+	ResourceLoader.load(path_to_preload)
+
 func _ready() -> void:
 	if DisplayServer.get_name() == "headless":
+		_preload_next_scene_for_headless()
 		return
-	SceneLoader.load_scene(get_next_scene_path(), true)
+	var scene_loader := _get_scene_loader()
+	if scene_loader:
+		scene_loader.load_scene(get_next_scene_path(), true)
 	_add_textures_to_container(images)
 	_transition_in()
