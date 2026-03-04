@@ -32,6 +32,11 @@ signal level_won(level_path : String)
 @export var combo_bonus_step : float = 0.2
 @export var combo_bonus_max : float = 3.0
 
+@export_group("HUD")
+@export var compact_hud : bool = true
+@export var show_objective_text : bool = false
+@export var show_hint_text : bool = false
+
 const ROCKET_RADIUS := 6.0
 const TRAIL_LENGTH := 9
 const PARTICLE_COUNT := 26
@@ -55,6 +60,8 @@ var _spawn_interval : float = 0.0
 var _level_finished : bool = false
 var _feedback_time_left : float = 0.0
 var _perfect_line_y : float = 0.0
+var _left_click_was_pressed : bool = false
+var _accept_was_pressed : bool = false
 
 @onready var _title_label : Label = %TitleLabel
 @onready var _objective_label : Label = %ObjectiveLabel
@@ -64,20 +71,47 @@ var _perfect_line_y : float = 0.0
 @onready var _progress_bar : ProgressBar = %ScoreProgressBar
 @onready var _hint_label : Label = %HintLabel
 @onready var _feedback_label : Label = %FeedbackLabel
+@onready var _hud_margin : MarginContainer = $HUDMargin
+@onready var _hud_vbox : VBoxContainer = $HUDMargin/HUDPanel/HUDVBox
+@onready var _top_row : HBoxContainer = $HUDMargin/HUDPanel/HUDVBox/TopRow
+@onready var _left_vbox : VBoxContainer = $HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox
+@onready var _right_vbox : VBoxContainer = $HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox
+@onready var _bottom_row : HBoxContainer = $HUDMargin/HUDPanel/HUDVBox/BottomRow
 
 func _ready() -> void:
 	_rng.randomize()
 	_time_left = level_duration_seconds
 	_spawn_interval = spawn_interval_base
 	_spawn_timer = 0.25
+	_left_click_was_pressed = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	_accept_was_pressed = Input.is_action_pressed(&"ui_accept")
 	_title_label.text = level_title
 	_objective_label.text = level_description
 	_hint_label.text = "Target %d points in %ds. Left click rockets near the guide line." % [target_score, int(round(level_duration_seconds))]
+	_apply_hud_layout()
 	_progress_bar.max_value = max(target_score, 1)
 	_update_perfect_line()
 	_update_hud()
 	resized.connect(_on_resized)
 	queue_redraw()
+
+func _apply_hud_layout() -> void:
+	_objective_label.visible = show_objective_text
+	_hint_label.visible = show_hint_text
+	if not compact_hud:
+		return
+	_hud_margin.add_theme_constant_override("margin_left", 12)
+	_hud_margin.add_theme_constant_override("margin_top", 12)
+	_hud_margin.add_theme_constant_override("margin_right", 12)
+	_hud_margin.add_theme_constant_override("margin_bottom", 12)
+	_hud_vbox.add_theme_constant_override("separation", 4)
+	_top_row.add_theme_constant_override("separation", 10)
+	_left_vbox.add_theme_constant_override("separation", 1)
+	_right_vbox.add_theme_constant_override("separation", 1)
+	_bottom_row.add_theme_constant_override("separation", 8)
+	_title_label.add_theme_font_size_override("font_size", 22)
+	_feedback_label.add_theme_font_size_override("font_size", 18)
+	_progress_bar.custom_minimum_size = Vector2(_progress_bar.custom_minimum_size.x, 10.0)
 
 func _on_resized() -> void:
 	_update_perfect_line()
@@ -86,17 +120,22 @@ func _on_resized() -> void:
 func _update_perfect_line() -> void:
 	_perfect_line_y = clampf(size.y * perfect_height_ratio, 64.0, max(64.0, size.y - 64.0))
 
-func _unhandled_input(event : InputEvent) -> void:
+func _update_click_input() -> void:
+	var left_click_pressed := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	var accept_pressed := Input.is_action_pressed(&"ui_accept")
 	if _level_finished:
+		_left_click_was_pressed = left_click_pressed
+		_accept_was_pressed = accept_pressed
 		return
-	if event is InputEventMouseButton:
-		var mouse_event := event as InputEventMouseButton
-		if mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed:
-			_try_detonate(mouse_event.position)
-	elif event.is_action_pressed(&"ui_accept"):
-		_try_detonate(get_global_mouse_position())
+	if left_click_pressed and not _left_click_was_pressed:
+		_try_detonate(get_local_mouse_position())
+	elif accept_pressed and not _accept_was_pressed:
+		_try_detonate(get_local_mouse_position())
+	_left_click_was_pressed = left_click_pressed
+	_accept_was_pressed = accept_pressed
 
 func _process(delta : float) -> void:
+	_update_click_input()
 	_update_timers(delta)
 	_update_fireworks(delta)
 	_update_particles(delta)
@@ -162,6 +201,7 @@ func _get_active_fireworks_count() -> int:
 func _spawn_firework() -> void:
 	var margin := 56.0
 	var x_position := _rng.randf_range(margin, max(margin, size.x - margin))
+	var trail : Array[Vector2] = []
 	var firework := {
 		"position": Vector2(x_position, size.y + 20.0),
 		"velocity": Vector2(
@@ -169,7 +209,7 @@ func _spawn_firework() -> void:
 			-_rng.randf_range(rocket_speed_min, rocket_speed_max)
 		),
 		"color": Color.from_hsv(_rng.randf(), _rng.randf_range(0.6, 0.9), _rng.randf_range(0.85, 1.0)),
-		"trail": Array[Vector2](),
+		"trail": trail,
 		"alive": true,
 		"age": 0.0,
 	}

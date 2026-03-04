@@ -1,6 +1,6 @@
 ---
 name: godot-game-template-core
-description: Use for implementing gameplay/features in this Maaack Godot Game Template project (menus, levels, state, loading flow). Includes a practical workflow for wiring new game loops into level signals, AppConfig scene paths, and template-compatible validation.
+description: Use for gameplay/features and scene-flow wiring in this Maaack Godot Game Template project. Covers project-first edits (`scenes/`, `scripts/`), level signal contracts, AppConfig path checks, and robust validation in clean environments.
 metadata:
   short-description: Godot template feature implementation
 ---
@@ -8,6 +8,12 @@ metadata:
 # Godot Game Template Core
 
 Use this skill when editing gameplay or flow in this repository.
+
+## Trigger cues
+
+- User asks for gameplay implementation, game loop changes, or level logic.
+- User asks for scene wiring, menu/level transitions, load screen flow, or AppConfig path fixes.
+- User reports level win/lose flow regressions after gameplay edits.
 
 ## Goals
 
@@ -40,6 +46,11 @@ Use this skill when editing gameplay or flow in this repository.
 - After each fix batch, restart and re-run once to avoid acting on stale buffered errors.
 - Separate `ERROR`/`SCRIPT ERROR` (must fix) from `WARNING` (can be deferred, but record).
 
+Validation command examples (choose what exists in environment):
+
+- `godot4 --headless --path . --quit`
+- `godot --headless --path . --quit`
+
 5. Dependency robustness pattern (important)
 - For cross-script calls, prefer explicit constants:
   - `const SOME_SCRIPT := preload("res://path/to/some_script.gd")`
@@ -52,6 +63,13 @@ Use this skill when editing gameplay or flow in this repository.
 - Startup-critical scenes should not hard-fail on optional textures/icons. Prefer safe defaults (empty arrays / null textures) and feature fallback.
 - If imported texture cache is unavailable in a clean environment, avoid introducing new hard dependencies on `.godot/imported/*` artifacts.
 - Treat UI icon assets as optional unless gameplay depends on them.
+
+## Minimal completion checklist
+
+- Gameplay changes are in project files (`scenes/` / `scripts/`) and not only addon examples.
+- Level scripts still emit `level_won(next_level_path)` and `level_lost`.
+- AppConfig and menu flow still open the intended project scenes.
+- At least one runtime/headless validation pass was performed and checked.
 
 7. UID hygiene
 - If many resources were moved/renamed or you see broad `invalid UID` warnings, run project UID refresh (`update_project_uids`) as a cleanup step.
