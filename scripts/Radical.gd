@@ -18,6 +18,8 @@ enum EnvironmentState {
 
 const RADICAL_COLLISION_LAYER : int = 1 << 5
 const RADICAL_COLLISION_MASK : int = 1 << 5
+const LICHUN_WOOD_GROWTH_RATE : float = 0.1
+const LICHUN_WOOD_GROWTH_CAP : float = 1.1
 
 @export var radical_type : Type = Type.WATER
 @export_range(0.1, 3.0, 0.1) var stick_hold_seconds : float = 1.0
@@ -161,6 +163,9 @@ func _apply_environment_modifiers() -> void:
 	absorb_duration = _base_absorb_duration
 	match _environment_state:
 		EnvironmentState.LICHUN:
+			if radical_type == Type.WOOD:
+				var growth_factor : float = min(1.0 + LICHUN_WOOD_GROWTH_RATE, LICHUN_WOOD_GROWTH_CAP)
+				mass *= growth_factor
 			return
 		EnvironmentState.DAHAN:
 			gravity_scale *= 1.18
