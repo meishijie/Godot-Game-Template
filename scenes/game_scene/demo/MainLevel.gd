@@ -7,6 +7,11 @@ signal level_won(level_path : String)
 const RADICAL_SCRIPT := preload("res://scripts/Radical.gd")
 const RADICAL_TYPE_NAMES : PackedStringArray = ["WATER", "FIRE", "WOOD", "STONE"]
 
+enum EnvironmentState {
+	LICHUN,
+	DAHAN,
+}
+
 @export_file("*.tscn") var next_level_path : String = ""
 @export var word_data : Resource
 @export var starter_word_scene : PackedScene
@@ -14,6 +19,9 @@ const RADICAL_TYPE_NAMES : PackedStringArray = ["WATER", "FIRE", "WOOD", "STONE"
 @export_range(8.0, 180.0, 1.0) var word_click_radius : float = 64.0
 @export_range(8.0, 200.0, 1.0) var synthesis_cluster_radius : float = 84.0
 @export_range(20.0, 320.0, 1.0) var configured_split_impulse_strength : float = 120.0
+@export var initial_environment_state : EnvironmentState = EnvironmentState.LICHUN
+@export var auto_switch_environment : bool = true
+@export_range(1.0, 120.0, 0.5) var environment_switch_interval_seconds : float = 12.0
 @export_flags_2d_physics var radical_collision_layer : int = 1 << 5
 @export_flags_2d_physics var radical_collision_mask : int = 1 << 5
 @export_flags_2d_physics var floor_collision_layer : int = 1 << 5
@@ -31,14 +39,27 @@ const RADICAL_TYPE_NAMES : PackedStringArray = ["WATER", "FIRE", "WOOD", "STONE"
 
 var _pending_radical_types : Array[int] = []
 var _consumed_radical_ids : Dictionary = {}
+var _current_environment_state : EnvironmentState = EnvironmentState.LICHUN
+var _environment_elapsed_seconds : float = 0.0
 
 func _ready() -> void:
+	_current_environment_state = _sanitize_environment_state(int(initial_environment_state))
+	_environment_elapsed_seconds = 0.0
 	_floor.collision_layer = floor_collision_layer
 	_floor.collision_mask = floor_collision_mask
 	_world_root.child_entered_tree.connect(_on_world_root_child_entered_tree)
 	_connect_existing_radicals()
 	_spawn_starter_word()
 	_set_hint("Click the word to split. Keep radicals overlapping to synthesize.")
+
+func _process(delta : float) -> void:
+	if not auto_switch_environment:
+		return
+	_environment_elapsed_seconds += delta
+	if _environment_elapsed_seconds < environment_switch_interval_seconds:
+		return
+	_environment_elapsed_seconds = 0.0
+	_toggle_environment_state()
 
 func _unhandled_input(event : InputEvent) -> void:
 	var mouse_event : InputEventMouseButton = event as InputEventMouseButton
@@ -153,6 +174,7 @@ func _register_radical(radical : Node) -> void:
 		radical.set("radical_type", assigned_type)
 		if radical.has_method("_apply_type_physics"):
 			radical.call("_apply_type_physics")
+	_apply_environment_to_radical(radical)
 
 func _on_radical_synthesis_prepared(other_radical : Node, source_radical : Node) -> void:
 	if not is_instance_valid(source_radical):
@@ -324,4 +346,35 @@ func _prune_consumed_ids() -> void:
 		_consumed_radical_ids.erase(object_id)
 
 func _set_hint(message : String) -> void:
-	_hint_label.text = message
+	_hint_label.text = "[%s] %s" % [_get_environment_state_name(_current_environment_state), message]
+
+func _toggle_environment_state() -> void:
+	if _current_environment_state == EnvironmentState.LICHUN:
+		_set_environment_state(EnvironmentState.DAHAN, true)
+		return
+	_set_environment_state(EnvironmentState.LICHUN, true)
+
+func _set_environment_state(next_state : int, announce_switch : bool) -> void:
+	_current_environment_state = _sanitize_environment_state(next_state)
+	_apply_environment_to_existing_radicals()
+	if announce_switch:
+		_set_hint("Season switched to %s." % _get_environment_state_name(_current_environment_state))
+
+func _apply_environment_to_existing_radicals() -> void:
+	for child in _world_root.get_children():
+		if _is_radical_node(child):
+			_apply_environment_to_radical(child)
+
+func _apply_environment_to_radical(radical : Node) -> void:
+	if radical.has_method("apply_environment_state"):
+		radical.call("apply_environment_state", int(_current_environment_state))
+
+func _sanitize_environment_state(value : int) -> EnvironmentState:
+	if value <= EnvironmentState.LICHUN:
+		return EnvironmentState.LICHUN
+	return EnvironmentState.DAHAN
+
+func _get_environment_state_name(value : EnvironmentState) -> String:
+	if value == EnvironmentState.DAHAN:
+		return "DAHAN"
+	return "LICHUN"

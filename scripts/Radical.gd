@@ -11,6 +11,11 @@ enum Type {
 	STONE,
 }
 
+enum Environment {
+	LICHUN,
+	DAHAN,
+}
+
 const RADICAL_COLLISION_LAYER : int = 1 << 5
 const RADICAL_COLLISION_MASK : int = 1 << 5
 
@@ -25,6 +30,10 @@ var _overlap_elapsed : Dictionary = {}
 var _overlap_bodies : Dictionary = {}
 var _prepared_targets : Dictionary = {}
 var _absorb_tween : Tween
+var _environment_state : Environment = Environment.LICHUN
+var _base_stick_hold_seconds : float = 1.0
+var _base_absorb_duration : float = 0.25
+var _base_environment_initialized : bool = false
 
 func _ready() -> void:
 	collision_layer = RADICAL_COLLISION_LAYER
@@ -33,6 +42,7 @@ func _ready() -> void:
 	_area_2d.collision_mask = RADICAL_COLLISION_MASK
 	_area_2d.monitoring = true
 	_area_2d.monitorable = false
+	_ensure_base_environment_parameters()
 	_apply_type_physics()
 
 func _physics_process(delta : float) -> void:
@@ -64,6 +74,11 @@ func absorb_to(target_position : Vector2) -> void:
 	_absorb_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_absorb_tween.tween_property(self, "global_position", target_position, absorb_duration)
 	_absorb_tween.finished.connect(_on_absorb_tween_finished, CONNECT_ONE_SHOT)
+
+func apply_environment_state(new_state : int) -> void:
+	_ensure_base_environment_parameters()
+	_environment_state = _sanitize_environment_state(new_state)
+	_apply_type_physics()
 
 func _on_area_2d_body_entered(body : Node) -> void:
 	if body == self:
@@ -105,6 +120,7 @@ func _try_absorb_pair(body : Node) -> void:
 		body.call_deferred("absorb_to", midpoint)
 
 func _apply_type_physics() -> void:
+	_ensure_base_environment_parameters()
 	match radical_type:
 		Type.WATER:
 			mass = 1.05
@@ -126,6 +142,32 @@ func _apply_type_physics() -> void:
 			gravity_scale = 1.2
 			linear_damp = 5.5
 			angular_damp = 4.0
+	_apply_environment_modifiers()
+
+func _ensure_base_environment_parameters() -> void:
+	if _base_environment_initialized:
+		return
+	_base_stick_hold_seconds = stick_hold_seconds
+	_base_absorb_duration = absorb_duration
+	_base_environment_initialized = true
+
+func _sanitize_environment_state(value : int) -> Environment:
+	if value <= Environment.LICHUN:
+		return Environment.LICHUN
+	return Environment.DAHAN
+
+func _apply_environment_modifiers() -> void:
+	stick_hold_seconds = _base_stick_hold_seconds
+	absorb_duration = _base_absorb_duration
+	match _environment_state:
+		Environment.LICHUN:
+			return
+		Environment.DAHAN:
+			gravity_scale *= 1.18
+			linear_damp *= 1.12
+			angular_damp *= 1.12
+			stick_hold_seconds = _base_stick_hold_seconds * 1.35
+			absorb_duration = _base_absorb_duration * 1.2
 
 func _clear_overlap_for_id(body_id : int) -> void:
 	_overlap_elapsed.erase(body_id)
