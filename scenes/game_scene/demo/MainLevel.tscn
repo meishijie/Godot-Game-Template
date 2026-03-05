@@ -19,6 +19,12 @@ script = ExtResource("1_j2j5r")
 word_data = ExtResource("4_j5o0u")
 starter_word_scene = ExtResource("2_4f8we")
 radical_scene = ExtResource("3_i8qpp")
+configured_split_impulse_strength = 120.0
+radical_collision_layer = 32
+radical_collision_mask = 32
+floor_collision_layer = 32
+floor_collision_mask = 32
+default_split_types = Array[int]([0, 1, 1])
 
 [node name="WorldRoot" type="Node2D" parent="."]
 
@@ -42,4 +48,4 @@ offset_left = 20.0
 offset_top = 18.0
 offset_right = 560.0
 offset_bottom = 44.0
-text = "MainLevel skeleton: WordData + Word/Radical entry points ready."
+text = "Click the word to split, then overlap radicals to synthesize."
