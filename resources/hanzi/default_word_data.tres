@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="WordData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/WordData.gd" id="1_xr6ww"]
+[ext_resource type="PackedScene" path="res://scenes/game_scene/hanzi/Word.tscn" id="2_wjmc4"]
+
+[resource]
+script = ExtResource("1_xr6ww")
+initial_word_scene = ExtResource("2_wjmc4")
+synthesis_recipes = {
+"WATER+FIRE+FIRE": ExtResource("2_wjmc4")
+}

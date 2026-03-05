@@ -1,0 +1,29 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Radical.gd" id="1_hgwlo"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_2k6r3"]
+radius = 14.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_m3ks1"]
+radius = 24.0
+
+[node name="Radical" type="RigidBody2D"]
+collision_layer = 32
+collision_mask = 32
+script = ExtResource("1_hgwlo")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_2k6r3")
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 32
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("CircleShape2D_m3ks1")
+
+[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]
+[connection signal="body_exited" from="Area2D" to="." method="_on_area_2d_body_exited"]
