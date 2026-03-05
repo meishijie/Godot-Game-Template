@@ -3,8 +3,22 @@ extends Node2D
 @export var radicals_inside: Array[PackedScene] = []
 @export var split_impulse_strength: float = 220.0
 @export var split_seed: int = 1337
+@export_range(16.0, 180.0, 1.0) var placeholder_radius: float = 34.0
+@export var placeholder_fill_color: Color = Color(0.18, 0.20, 0.32, 1.0)
+@export var placeholder_stroke_color: Color = Color(0.95, 0.95, 0.98, 0.95)
 
 var _has_split: bool = false
+
+func _ready() -> void:
+	z_index = 1
+	queue_redraw()
+
+func _draw() -> void:
+	draw_circle(Vector2.ZERO, placeholder_radius, placeholder_fill_color)
+	draw_arc(Vector2.ZERO, placeholder_radius, 0.0, TAU, 48, placeholder_stroke_color, 2.0, true)
+	var cross_half := placeholder_radius * 0.38
+	draw_line(Vector2(-cross_half, 0.0), Vector2(cross_half, 0.0), placeholder_stroke_color, 2.0, true)
+	draw_line(Vector2(0.0, -cross_half), Vector2(0.0, cross_half), placeholder_stroke_color, 2.0, true)
 
 func split() -> void:
 	if _has_split:
