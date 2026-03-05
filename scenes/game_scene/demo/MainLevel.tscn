@@ -1,0 +1,45 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/game_scene/demo/MainLevel.gd" id="1_j2j5r"]
+[ext_resource type="PackedScene" path="res://scenes/game_scene/hanzi/Word.tscn" id="2_4f8we"]
+[ext_resource type="PackedScene" path="res://scenes/game_scene/demo/Radical.tscn" id="3_i8qpp"]
+[ext_resource type="Resource" path="res://resources/hanzi/default_word_data.tres" id="4_j5o0u"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_aib4n"]
+size = Vector2(1200, 40)
+
+[node name="MainLevel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_j2j5r")
+word_data = ExtResource("4_j5o0u")
+starter_word_scene = ExtResource("2_4f8we")
+radical_scene = ExtResource("3_i8qpp")
+
+[node name="WorldRoot" type="Node2D" parent="."]
+
+[node name="WordSpawn" type="Marker2D" parent="WorldRoot"]
+position = Vector2(640, 260)
+
+[node name="RadicalSpawn" type="Marker2D" parent="WorldRoot"]
+position = Vector2(640, 330)
+
+[node name="Floor" type="StaticBody2D" parent="WorldRoot"]
+position = Vector2(640, 620)
+collision_layer = 32
+collision_mask = 32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldRoot/Floor"]
+shape = SubResource("RectangleShape2D_aib4n")
+
+[node name="Hint" type="Label" parent="."]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 560.0
+offset_bottom = 44.0
+text = "MainLevel skeleton: WordData + Word/Radical entry points ready."
