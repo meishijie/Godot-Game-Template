@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://da00hutaakwk6"]
 
-[ext_resource type="Script" path="res://scenes/game_scene/levels/fireworks_level.gd" id="1_7bh5u"]
+[ext_resource type="Script" uid="uid://c72vchbpt2kpl" path="res://scenes/game_scene/levels/fireworks_level.gd" id="1_7bh5u"]
 
 [node name="Level1" type="Control" unique_id=266725257]
 layout_mode = 3
@@ -38,7 +38,7 @@ segmented_turn_interval = 0.14
 segmented_turn_angle = 0.42
 segmented_jitter_impulse = 70.0
 
-[node name="HUDMargin" type="MarginContainer" parent="."]
+[node name="HUDMargin" type="MarginContainer" parent="." unique_id=935233190]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -51,76 +51,77 @@ theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
-[node name="HUDPanel" type="PanelContainer" parent="HUDMargin"]
+[node name="HUDPanel" type="PanelContainer" parent="HUDMargin" unique_id=41979946]
 layout_mode = 2
 
-[node name="HUDVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel"]
+[node name="HUDVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel" unique_id=1027076395]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TopRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox"]
+[node name="TopRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox" unique_id=1686573668]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="LeftVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow"]
+[node name="LeftVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow" unique_id=899300379]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 3
 
-[node name="TitleLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox"]
+[node name="TitleLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox" unique_id=1150888127]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Festival Prelude"
 
-[node name="ObjectiveLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox"]
+[node name="ObjectiveLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox" unique_id=1983558813]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Learn the timing window and build short combos."
 
-[node name="RightVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow"]
+[node name="RightVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow" unique_id=432135213]
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="ScoreLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox"]
+[node name="ScoreLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox" unique_id=629621563]
 unique_name_in_owner = true
 layout_mode = 2
-horizontal_alignment = 2
 text = "Score: 0 / 3200"
+horizontal_alignment = 2
 
-[node name="ComboLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox"]
+[node name="ComboLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox" unique_id=367670293]
 unique_name_in_owner = true
 layout_mode = 2
-horizontal_alignment = 2
 text = "Combo: x0"
+horizontal_alignment = 2
 
-[node name="TimerLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox"]
+[node name="TimerLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox" unique_id=1727056574]
 unique_name_in_owner = true
 layout_mode = 2
-horizontal_alignment = 2
 text = "Time: 45"
+horizontal_alignment = 2
 
-[node name="ScoreProgressBar" type="ProgressBar" parent="HUDMargin/HUDPanel/HUDVBox"]
+[node name="ScoreProgressBar" type="ProgressBar" parent="HUDMargin/HUDPanel/HUDVBox" unique_id=715302472]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
-show_percentage = false
 max_value = 3200.0
-value = 0.0
+show_percentage = false
 
-[node name="BottomRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox"]
+[node name="BottomRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox" unique_id=1555450337]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="HintLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow"]
+[node name="HintLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow" unique_id=2009538646]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Target 3200 points in 45s. Left click rockets near the guide line."
 
-[node name="FeedbackLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow"]
+[node name="FeedbackLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow" unique_id=1949283448]
 unique_name_in_owner = true
 layout_mode = 2
-horizontal_alignment = 2
 theme_override_font_sizes/font_size = 22
 text = "Ready"
+horizontal_alignment = 2

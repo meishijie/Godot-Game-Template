@@ -1,7 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3]
 
-[ext_resource type="Script" path="res://scenes/game_scene/demo/MainLevel.gd" id="1_j2j5r"]
-[ext_resource type="PackedScene" path="res://scenes/game_scene/hanzi/Word.tscn" id="2_4f8we"]
+[ext_resource type="Script" uid="uid://d7k8q0e14py8" path="res://scenes/game_scene/demo/MainLevel.gd" id="1_j2j5r"]
+[ext_resource type="PackedScene" uid="uid://c20x7x8m8ev1y" path="res://scenes/game_scene/levels/Word.tscn" id="2_4f8we"]
 [ext_resource type="PackedScene" path="res://scenes/game_scene/demo/Radical.tscn" id="3_i8qpp"]
 [ext_resource type="Resource" path="res://resources/hanzi/default_word_data.tres" id="4_j5o0u"]
 

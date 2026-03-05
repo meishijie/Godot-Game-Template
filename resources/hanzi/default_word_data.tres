@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="WordData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="WordData" format=3]
 
-[ext_resource type="Script" path="res://scripts/WordData.gd" id="1_xr6ww"]
-[ext_resource type="PackedScene" path="res://scenes/game_scene/hanzi/Word.tscn" id="2_wjmc4"]
+[ext_resource type="Script" uid="uid://ugd5pspb8fav" path="res://scripts/WordData.gd" id="1_xr6ww"]
+[ext_resource type="PackedScene" uid="uid://c20x7x8m8ev1y" path="res://scenes/game_scene/levels/Word.tscn" id="2_wjmc4"]
 
 [resource]
 script = ExtResource("1_xr6ww")
