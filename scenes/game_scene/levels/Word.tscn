@@ -4,7 +4,3 @@
 
 [node name="Word" type="Node2D" unique_id=1044706111]
 script = ExtResource("1_lfnln")
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1961784003]
-offset_right = 298.0
-offset_bottom = 182.0
