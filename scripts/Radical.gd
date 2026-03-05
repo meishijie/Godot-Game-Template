@@ -11,7 +11,7 @@ enum Type {
 	STONE,
 }
 
-enum Environment {
+enum EnvironmentState {
 	LICHUN,
 	DAHAN,
 }
@@ -30,7 +30,7 @@ var _overlap_elapsed : Dictionary = {}
 var _overlap_bodies : Dictionary = {}
 var _prepared_targets : Dictionary = {}
 var _absorb_tween : Tween
-var _environment_state : Environment = Environment.LICHUN
+var _environment_state : EnvironmentState = EnvironmentState.LICHUN
 var _base_stick_hold_seconds : float = 1.0
 var _base_absorb_duration : float = 0.25
 var _base_environment_initialized : bool = false
@@ -151,18 +151,18 @@ func _ensure_base_environment_parameters() -> void:
 	_base_absorb_duration = absorb_duration
 	_base_environment_initialized = true
 
-func _sanitize_environment_state(value : int) -> Environment:
-	if value <= Environment.LICHUN:
-		return Environment.LICHUN
-	return Environment.DAHAN
+func _sanitize_environment_state(value : int) -> EnvironmentState:
+	if value <= EnvironmentState.LICHUN:
+		return EnvironmentState.LICHUN
+	return EnvironmentState.DAHAN
 
 func _apply_environment_modifiers() -> void:
 	stick_hold_seconds = _base_stick_hold_seconds
 	absorb_duration = _base_absorb_duration
 	match _environment_state:
-		Environment.LICHUN:
+		EnvironmentState.LICHUN:
 			return
-		Environment.DAHAN:
+		EnvironmentState.DAHAN:
 			gravity_scale *= 1.18
 			linear_damp *= 1.12
 			angular_damp *= 1.12
