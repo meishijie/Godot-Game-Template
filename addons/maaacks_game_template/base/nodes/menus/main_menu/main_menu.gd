@@ -7,6 +7,9 @@ signal sub_menu_closed
 signal game_started
 signal game_exited
 
+const APP_CONFIG_PATH := ^"/root/AppConfig"
+const SCENE_LOADER_PATH := ^"/root/SceneLoader"
+
 ## Defines the path to the game scene. Hides the play button if empty.
 ## Will attempt to read from AppConfig if left empty.
 @export_file("*.tscn") var game_scene_path : String
@@ -31,17 +34,32 @@ var sub_menu : Control
 @onready var exit_button = %ExitButton
 @onready var exit_confirmation = %ExitConfirmation
 
+func _get_app_config() -> Node:
+	return get_node_or_null(APP_CONFIG_PATH)
+
+func _get_scene_loader() -> Node:
+	return get_node_or_null(SCENE_LOADER_PATH)
+
 func get_game_scene_path() -> String:
 	if game_scene_path.is_empty():
-		return AppConfig.game_scene_path
+		var app_config := _get_app_config()
+		if app_config:
+			var configured_path = app_config.get("game_scene_path")
+			if configured_path is String:
+				return configured_path
+		return ""
 	return game_scene_path
 
 func load_game_scene() -> void:
+	var scene_loader := _get_scene_loader()
+	if scene_loader == null:
+		push_error("SceneLoader autoload not found")
+		return
 	if signal_game_start:
-		SceneLoader.load_scene(get_game_scene_path(), true)
+		scene_loader.call("load_scene", get_game_scene_path(), true)
 		game_started.emit()
 	else:
-		SceneLoader.load_scene(get_game_scene_path())
+		scene_loader.call("load_scene", get_game_scene_path())
 
 func new_game() -> void:
 	load_game_scene()

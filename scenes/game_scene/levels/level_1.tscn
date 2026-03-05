@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://da00hutaakwk6"]
 
-[ext_resource type="Script" uid="uid://c72vchbpt2kpl" path="res://scenes/game_scene/levels/fireworks_level.gd" id="1_7bh5u"]
+[ext_resource type="Script" path="res://scenes/game_scene/levels/fireworks_level.gd" id="1_7bh5u"]
 
 [node name="Level1" type="Control" unique_id=266725257]
 layout_mode = 3
@@ -12,22 +12,33 @@ grow_vertical = 2
 script = ExtResource("1_7bh5u")
 next_level_path = "res://scenes/game_scene/levels/level_2.tscn"
 level_title = "Festival Prelude"
-level_description = "Learn the timing window and build short combos."
-target_score = 3200
+level_description = "Warm-up pacing with forgiving timing and gentle particle curves."
+level_duration_seconds = 48.0
+target_score = 3000
 max_active_fireworks = 3
-spawn_interval_base = 1.15
-spawn_interval_floor = 0.5
-spawn_acceleration = 0.01
-rocket_speed_min = 250.0
-rocket_speed_max = 360.0
-rocket_drift_strength = 65.0
-perfect_window_px = 32.0
-good_window_px = 84.0
-miss_penalty = 40
-combo_bonus_step = 0.16
-combo_bonus_max = 2.2
+spawn_interval_base = 1.2
+spawn_interval_floor = 0.56
+spawn_acceleration = 0.009
+rocket_speed_min = 235.0
+rocket_speed_max = 340.0
+rocket_drift_strength = 55.0
+perfect_window_px = 34.0
+good_window_px = 90.0
+click_radius_px = 92.0
+miss_penalty = 35
+combo_bonus_step = 0.14
+combo_bonus_max = 2.0
+spiral_turn_rate = 4.2
+spiral_side_force = 85.0
+wave_frequency = 11.5
+wave_lateral_force = 150.0
+boomerang_return_delay = 0.28
+boomerang_pull_strength = 300.0
+segmented_turn_interval = 0.14
+segmented_turn_angle = 0.42
+segmented_jitter_impulse = 70.0
 
-[node name="HUDMargin" type="MarginContainer" parent="." unique_id=1323540376]
+[node name="HUDMargin" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -40,76 +51,76 @@ theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
-[node name="HUDPanel" type="PanelContainer" parent="HUDMargin" unique_id=1443271130]
-visible = false
+[node name="HUDPanel" type="PanelContainer" parent="HUDMargin"]
 layout_mode = 2
 
-[node name="HUDVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel" unique_id=894406238]
+[node name="HUDVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TopRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox" unique_id=1256866412]
+[node name="TopRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="LeftVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow" unique_id=1583608634]
+[node name="LeftVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 3
 
-[node name="TitleLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox" unique_id=1846938027]
+[node name="TitleLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Festival Prelude"
 
-[node name="ObjectiveLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox" unique_id=588520445]
+[node name="ObjectiveLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Learn the timing window and build short combos."
 
-[node name="RightVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow" unique_id=984361095]
+[node name="RightVBox" type="VBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox/TopRow"]
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="ScoreLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox" unique_id=215103162]
+[node name="ScoreLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox"]
 unique_name_in_owner = true
 layout_mode = 2
+horizontal_alignment = 2
 text = "Score: 0 / 3200"
-horizontal_alignment = 2
 
-[node name="ComboLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox" unique_id=65365308]
+[node name="ComboLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox"]
 unique_name_in_owner = true
 layout_mode = 2
+horizontal_alignment = 2
 text = "Combo: x0"
-horizontal_alignment = 2
 
-[node name="TimerLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox" unique_id=218894416]
+[node name="TimerLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Time: 45"
 horizontal_alignment = 2
+text = "Time: 45"
 
-[node name="ScoreProgressBar" type="ProgressBar" parent="HUDMargin/HUDPanel/HUDVBox" unique_id=904458768]
+[node name="ScoreProgressBar" type="ProgressBar" parent="HUDMargin/HUDPanel/HUDVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
-max_value = 3200.0
 show_percentage = false
+max_value = 3200.0
+value = 0.0
 
-[node name="BottomRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox" unique_id=278080458]
+[node name="BottomRow" type="HBoxContainer" parent="HUDMargin/HUDPanel/HUDVBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="HintLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow" unique_id=443619241]
+[node name="HintLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Target 3200 points in 45s. Left click rockets near the guide line."
 
-[node name="FeedbackLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow" unique_id=102199866]
+[node name="FeedbackLabel" type="Label" parent="HUDMargin/HUDPanel/HUDVBox/BottomRow"]
 unique_name_in_owner = true
 layout_mode = 2
+horizontal_alignment = 2
 theme_override_font_sizes/font_size = 22
 text = "Ready"
-horizontal_alignment = 2

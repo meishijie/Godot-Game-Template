@@ -32,10 +32,16 @@ signal level_won(level_path : String)
 @export var combo_bonus_step : float = 0.2
 @export var combo_bonus_max : float = 3.0
 
-@export_group("HUD")
-@export var compact_hud : bool = true
-@export var show_objective_text : bool = false
-@export var show_hint_text : bool = false
+@export_group("Particle Trajectories")
+@export_range(0.0, 18.0, 0.1) var spiral_turn_rate : float = 6.8
+@export_range(0.0, 360.0, 1.0) var spiral_side_force : float = 125.0
+@export_range(1.0, 40.0, 0.1) var wave_frequency : float = 18.0
+@export_range(0.0, 420.0, 1.0) var wave_lateral_force : float = 240.0
+@export_range(0.0, 1.0, 0.01) var boomerang_return_delay : float = 0.18
+@export_range(0.0, 900.0, 1.0) var boomerang_pull_strength : float = 460.0
+@export_range(0.02, 0.4, 0.01) var segmented_turn_interval : float = 0.08
+@export_range(0.0, 1.6, 0.01) var segmented_turn_angle : float = 0.72
+@export_range(0.0, 320.0, 1.0) var segmented_jitter_impulse : float = 120.0
 
 const ROCKET_RADIUS := 6.0
 const TRAIL_LENGTH := 9
@@ -44,6 +50,20 @@ const PARTICLE_LIFETIME_MIN := 0.35
 const PARTICLE_LIFETIME_MAX := 0.75
 const PARTICLE_SPEED_MIN := 90.0
 const PARTICLE_SPEED_MAX := 300.0
+const TYPE_BURST := &"burst"
+const TYPE_RING := &"ring"
+const TYPE_PALM := &"palm"
+const TRAJECTORY_SPIRAL := &"spiral"
+const TRAJECTORY_WAVE := &"wave"
+const TRAJECTORY_BOOMERANG := &"boomerang"
+const TRAJECTORY_SEGMENTED := &"segmented"
+const FIREWORK_TYPE_ORDER : Array[StringName] = [TYPE_BURST, TYPE_RING, TYPE_PALM]
+const TRAJECTORY_TYPE_ORDER : Array[StringName] = [
+	TRAJECTORY_SPIRAL,
+	TRAJECTORY_WAVE,
+	TRAJECTORY_BOOMERANG,
+	TRAJECTORY_SEGMENTED,
+]
 const FEEDBACK_LIFETIME := 0.6
 const BACKGROUND_COLOR := Color(0.04, 0.04, 0.1, 1.0)
 const BACKGROUND_TOP_COLOR := Color(0.07, 0.05, 0.2, 1.0)
@@ -60,8 +80,8 @@ var _spawn_interval : float = 0.0
 var _level_finished : bool = false
 var _feedback_time_left : float = 0.0
 var _perfect_line_y : float = 0.0
-var _left_click_was_pressed : bool = false
-var _accept_was_pressed : bool = false
+var _next_firework_type_index : int = 0
+var _next_trajectory_type_index : int = 0
 
 @onready var _title_label : Label = %TitleLabel
 @onready var _objective_label : Label = %ObjectiveLabel
@@ -71,47 +91,20 @@ var _accept_was_pressed : bool = false
 @onready var _progress_bar : ProgressBar = %ScoreProgressBar
 @onready var _hint_label : Label = %HintLabel
 @onready var _feedback_label : Label = %FeedbackLabel
-@onready var _hud_margin : MarginContainer = $HUDMargin
-@onready var _hud_vbox : VBoxContainer = $HUDMargin/HUDPanel/HUDVBox
-@onready var _top_row : HBoxContainer = $HUDMargin/HUDPanel/HUDVBox/TopRow
-@onready var _left_vbox : VBoxContainer = $HUDMargin/HUDPanel/HUDVBox/TopRow/LeftVBox
-@onready var _right_vbox : VBoxContainer = $HUDMargin/HUDPanel/HUDVBox/TopRow/RightVBox
-@onready var _bottom_row : HBoxContainer = $HUDMargin/HUDPanel/HUDVBox/BottomRow
 
 func _ready() -> void:
 	_rng.randomize()
 	_time_left = level_duration_seconds
 	_spawn_interval = spawn_interval_base
 	_spawn_timer = 0.25
-	_left_click_was_pressed = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-	_accept_was_pressed = Input.is_action_pressed(&"ui_accept")
 	_title_label.text = level_title
 	_objective_label.text = level_description
-	_hint_label.text = "Target %d points in %ds. Left click rockets near the guide line." % [target_score, int(round(level_duration_seconds))]
-	_apply_hud_layout()
+	_hint_label.text = "Target %d points in %ds. Burst -> Ring -> Palm cycle." % [target_score, int(round(level_duration_seconds))]
 	_progress_bar.max_value = max(target_score, 1)
 	_update_perfect_line()
 	_update_hud()
 	resized.connect(_on_resized)
 	queue_redraw()
-
-func _apply_hud_layout() -> void:
-	_objective_label.visible = show_objective_text
-	_hint_label.visible = show_hint_text
-	if not compact_hud:
-		return
-	_hud_margin.add_theme_constant_override("margin_left", 12)
-	_hud_margin.add_theme_constant_override("margin_top", 12)
-	_hud_margin.add_theme_constant_override("margin_right", 12)
-	_hud_margin.add_theme_constant_override("margin_bottom", 12)
-	_hud_vbox.add_theme_constant_override("separation", 4)
-	_top_row.add_theme_constant_override("separation", 10)
-	_left_vbox.add_theme_constant_override("separation", 1)
-	_right_vbox.add_theme_constant_override("separation", 1)
-	_bottom_row.add_theme_constant_override("separation", 8)
-	_title_label.add_theme_font_size_override("font_size", 22)
-	_feedback_label.add_theme_font_size_override("font_size", 18)
-	_progress_bar.custom_minimum_size = Vector2(_progress_bar.custom_minimum_size.x, 10.0)
 
 func _on_resized() -> void:
 	_update_perfect_line()
@@ -120,22 +113,17 @@ func _on_resized() -> void:
 func _update_perfect_line() -> void:
 	_perfect_line_y = clampf(size.y * perfect_height_ratio, 64.0, max(64.0, size.y - 64.0))
 
-func _update_click_input() -> void:
-	var left_click_pressed := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-	var accept_pressed := Input.is_action_pressed(&"ui_accept")
+func _unhandled_input(event : InputEvent) -> void:
 	if _level_finished:
-		_left_click_was_pressed = left_click_pressed
-		_accept_was_pressed = accept_pressed
 		return
-	if left_click_pressed and not _left_click_was_pressed:
-		_try_detonate(get_local_mouse_position())
-	elif accept_pressed and not _accept_was_pressed:
-		_try_detonate(get_local_mouse_position())
-	_left_click_was_pressed = left_click_pressed
-	_accept_was_pressed = accept_pressed
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed:
+			_try_detonate(mouse_event.position)
+	elif event.is_action_pressed(&"ui_accept"):
+		_try_detonate(get_global_mouse_position())
 
 func _process(delta : float) -> void:
-	_update_click_input()
 	_update_timers(delta)
 	_update_fireworks(delta)
 	_update_particles(delta)
@@ -163,8 +151,9 @@ func _update_fireworks(delta : float) -> void:
 		firework["position"] += firework["velocity"] * delta
 		firework["age"] += delta
 		var trail : Array[Vector2] = firework["trail"]
+		var trail_limit : int = firework.get("trail_limit", TRAIL_LENGTH)
 		trail.push_back(firework["position"])
-		if trail.size() > TRAIL_LENGTH:
+		if trail.size() > trail_limit:
 			trail.pop_front()
 		if firework["position"].y < rocket_escape_y:
 			firework["alive"] = false
@@ -176,9 +165,13 @@ func _update_particles(delta : float) -> void:
 		particle["life"] -= delta
 		if particle["life"] <= 0.0:
 			continue
+		particle["age"] += delta
 		var velocity : Vector2 = particle["velocity"]
-		velocity *= 0.98
-		velocity.y += 180.0 * delta
+		var drag : float = particle.get("drag", 0.98)
+		var gravity_scale : float = particle.get("gravity_scale", 1.0)
+		velocity *= drag
+		velocity.y += 180.0 * gravity_scale * delta
+		velocity = _apply_particle_trajectory(particle, velocity, delta)
 		particle["velocity"] = velocity
 		particle["position"] += velocity * delta
 	_particles = _particles.filter(func(particle : Dictionary) -> bool: return particle["life"] > 0.0)
@@ -201,6 +194,7 @@ func _get_active_fireworks_count() -> int:
 func _spawn_firework() -> void:
 	var margin := 56.0
 	var x_position := _rng.randf_range(margin, max(margin, size.x - margin))
+	var firework_type := _next_firework_type()
 	var trail : Array[Vector2] = []
 	var firework := {
 		"position": Vector2(x_position, size.y + 20.0),
@@ -208,8 +202,10 @@ func _spawn_firework() -> void:
 			_rng.randf_range(-rocket_drift_strength, rocket_drift_strength),
 			-_rng.randf_range(rocket_speed_min, rocket_speed_max)
 		),
-		"color": Color.from_hsv(_rng.randf(), _rng.randf_range(0.6, 0.9), _rng.randf_range(0.85, 1.0)),
+		"color": _pick_firework_color(firework_type),
+		"type": firework_type,
 		"trail": trail,
+		"trail_limit": _trail_length_for_type(firework_type),
 		"alive": true,
 		"age": 0.0,
 	}
@@ -229,8 +225,9 @@ func _try_detonate(click_position : Vector2) -> void:
 		_register_miss("Whiff")
 		return
 	nearest["alive"] = false
+	var firework_type : StringName = nearest["type"]
 	var score_awarded := _score_for_hit(nearest["position"].y)
-	_create_explosion(nearest["position"], nearest["color"], score_awarded == 0)
+	_create_explosion(nearest["position"], nearest["color"], firework_type, score_awarded == 0)
 	if score_awarded > 0:
 		_combo += 1
 		_max_combo = max(_max_combo, _combo)
@@ -238,7 +235,7 @@ func _try_detonate(click_position : Vector2) -> void:
 		var final_score := int(round(score_awarded * combo_multiplier))
 		_score += final_score
 		var quality_text := "Perfect" if score_awarded == perfect_base_score else "Good"
-		_show_feedback("%s +%d" % [quality_text, final_score], Color(0.7, 1.0, 0.8, 1.0))
+		_show_feedback("%s [%s] +%d" % [quality_text, _type_label(firework_type), final_score], Color(0.7, 1.0, 0.8, 1.0))
 	else:
 		_register_miss("Miss")
 	_update_hud()
@@ -262,21 +259,188 @@ func _show_feedback(text : String, color : Color) -> void:
 	_feedback_label.modulate = color
 	_feedback_time_left = FEEDBACK_LIFETIME
 
-func _create_explosion(center : Vector2, color : Color, is_miss : bool) -> void:
+func _create_explosion(center : Vector2, color : Color, firework_type : StringName, is_miss : bool) -> void:
 	var particle_count := PARTICLE_COUNT
 	if is_miss:
 		particle_count = int(PARTICLE_COUNT / 2)
-	for i in particle_count:
+	match firework_type:
+		TYPE_RING:
+			_create_ring_explosion(center, color, particle_count, is_miss)
+		TYPE_PALM:
+			_create_palm_explosion(center, color, particle_count, is_miss)
+		_:
+			_create_burst_explosion(center, color, particle_count)
+
+func _next_firework_type() -> StringName:
+	if FIREWORK_TYPE_ORDER.is_empty():
+		return TYPE_BURST
+	var firework_type : StringName = FIREWORK_TYPE_ORDER[_next_firework_type_index % FIREWORK_TYPE_ORDER.size()]
+	_next_firework_type_index = (_next_firework_type_index + 1) % FIREWORK_TYPE_ORDER.size()
+	return firework_type
+
+func _next_trajectory_type() -> StringName:
+	if TRAJECTORY_TYPE_ORDER.is_empty():
+		return TRAJECTORY_SPIRAL
+	var trajectory_type : StringName = TRAJECTORY_TYPE_ORDER[_next_trajectory_type_index % TRAJECTORY_TYPE_ORDER.size()]
+	_next_trajectory_type_index = (_next_trajectory_type_index + 1) % TRAJECTORY_TYPE_ORDER.size()
+	return trajectory_type
+
+func _apply_particle_trajectory(particle : Dictionary, velocity : Vector2, delta : float) -> Vector2:
+	var trajectory_type : StringName = particle.get("trajectory_type", TRAJECTORY_SPIRAL)
+	match trajectory_type:
+		TRAJECTORY_WAVE:
+			return _apply_wave_trajectory(particle, velocity, delta)
+		TRAJECTORY_BOOMERANG:
+			return _apply_boomerang_trajectory(particle, velocity, delta)
+		TRAJECTORY_SEGMENTED:
+			return _apply_segmented_trajectory(particle, velocity, delta)
+		_:
+			return _apply_spiral_trajectory(particle, velocity, delta)
+
+func _apply_spiral_trajectory(particle : Dictionary, velocity : Vector2, delta : float) -> Vector2:
+	var direction_sign : float = particle.get("trajectory_dir", 1.0)
+	var rotated_velocity := velocity.rotated(spiral_turn_rate * direction_sign * delta)
+	var forward := rotated_velocity.normalized()
+	if forward == Vector2.ZERO:
+		forward = Vector2.RIGHT
+	var tangent := Vector2(-forward.y, forward.x)
+	return rotated_velocity + (tangent * spiral_side_force * delta)
+
+func _apply_wave_trajectory(particle : Dictionary, velocity : Vector2, delta : float) -> Vector2:
+	var axis : Vector2 = particle.get("trajectory_axis", velocity.normalized())
+	if axis == Vector2.ZERO:
+		axis = Vector2.UP
+	var phase : float = particle.get("trajectory_phase", 0.0)
+	var side_wave := sin((particle["age"] * wave_frequency) + phase)
+	var normal := Vector2(-axis.y, axis.x)
+	return velocity + (normal * side_wave * wave_lateral_force * delta)
+
+func _apply_boomerang_trajectory(particle : Dictionary, velocity : Vector2, delta : float) -> Vector2:
+	if particle["age"] < boomerang_return_delay:
+		return velocity
+	var origin : Vector2 = particle.get("origin", particle["position"])
+	var position : Vector2 = particle.get("position", origin)
+	var to_origin : Vector2 = origin - position
+	var distance : float = to_origin.length()
+	if distance <= 0.001:
+		return velocity
+	return velocity + ((to_origin / distance) * boomerang_pull_strength * delta)
+
+func _apply_segmented_trajectory(particle : Dictionary, velocity : Vector2, delta : float) -> Vector2:
+	var segment_timer : float = particle.get("segment_timer", segmented_turn_interval)
+	segment_timer -= delta
+	if segment_timer <= 0.0:
+		velocity = velocity.rotated(_rng.randf_range(-segmented_turn_angle, segmented_turn_angle))
+		velocity += Vector2(
+			_rng.randf_range(-segmented_jitter_impulse, segmented_jitter_impulse),
+			_rng.randf_range(-segmented_jitter_impulse, segmented_jitter_impulse)
+		)
+		segment_timer += max(0.02, segmented_turn_interval)
+	particle["segment_timer"] = segment_timer
+	return velocity
+
+func _trail_length_for_type(firework_type : StringName) -> int:
+	match firework_type:
+		TYPE_RING:
+			return TRAIL_LENGTH + 2
+		TYPE_PALM:
+			return TRAIL_LENGTH + 5
+		_:
+			return TRAIL_LENGTH
+
+func _type_label(firework_type : StringName) -> String:
+	match firework_type:
+		TYPE_RING:
+			return "Ring"
+		TYPE_PALM:
+			return "Palm"
+		_:
+			return "Burst"
+
+func _pick_firework_color(firework_type : StringName) -> Color:
+	match firework_type:
+		TYPE_RING:
+			return Color.from_hsv(_rng.randf_range(0.52, 0.67), _rng.randf_range(0.6, 0.9), _rng.randf_range(0.85, 1.0))
+		TYPE_PALM:
+			return Color.from_hsv(_rng.randf_range(0.08, 0.16), _rng.randf_range(0.5, 0.82), _rng.randf_range(0.88, 1.0))
+		_:
+			return Color.from_hsv(_rng.randf_range(0.0, 0.08), _rng.randf_range(0.62, 0.95), _rng.randf_range(0.85, 1.0))
+
+func _create_burst_explosion(center : Vector2, color : Color, particle_count : int) -> void:
+	for _i in range(particle_count):
 		var angle := _rng.randf_range(0.0, TAU)
 		var speed := _rng.randf_range(PARTICLE_SPEED_MIN, PARTICLE_SPEED_MAX)
-		_particles.push_back({
-			"position": center,
-			"velocity": Vector2.RIGHT.rotated(angle) * speed,
-			"life": _rng.randf_range(PARTICLE_LIFETIME_MIN, PARTICLE_LIFETIME_MAX),
-			"max_life": PARTICLE_LIFETIME_MAX,
-			"size": _rng.randf_range(2.5, 5.5),
-			"color": color,
-		})
+		_spawn_particle(
+			center,
+			Vector2.RIGHT.rotated(angle) * speed,
+			color,
+			_rng.randf_range(2.5, 5.5),
+			1.0,
+			0.98,
+			_next_trajectory_type()
+		)
+
+func _create_ring_explosion(center : Vector2, color : Color, particle_count : int, is_miss : bool) -> void:
+	var gravity_scale := 1.0 if is_miss else 0.75
+	for i in range(particle_count):
+		var ratio := float(i) / float(max(particle_count, 1))
+		var angle := (ratio * TAU) + _rng.randf_range(-0.08, 0.08)
+		var speed := _rng.randf_range(PARTICLE_SPEED_MIN + 55.0, PARTICLE_SPEED_MAX - 40.0)
+		_spawn_particle(
+			center,
+			Vector2.RIGHT.rotated(angle) * speed,
+			color.lightened(_rng.randf_range(0.0, 0.24)),
+			_rng.randf_range(2.2, 4.2),
+			gravity_scale,
+			0.985,
+			_next_trajectory_type()
+		)
+
+func _create_palm_explosion(center : Vector2, color : Color, particle_count : int, is_miss : bool) -> void:
+	var gravity_scale := 1.75 if not is_miss else 1.3
+	for _i in range(particle_count):
+		var angle := _rng.randf_range(-PI * 0.86, -PI * 0.14)
+		var speed := _rng.randf_range(PARTICLE_SPEED_MIN + 25.0, PARTICLE_SPEED_MAX - 20.0)
+		var velocity := Vector2.RIGHT.rotated(angle) * speed
+		velocity.x *= 0.58
+		_spawn_particle(
+			center,
+			velocity,
+			color.darkened(_rng.randf_range(0.0, 0.2)),
+			_rng.randf_range(2.4, 4.8),
+			gravity_scale,
+			0.97,
+			_next_trajectory_type()
+		)
+
+func _spawn_particle(
+	center : Vector2,
+	velocity : Vector2,
+	color : Color,
+	size : float,
+	gravity_scale : float,
+	drag : float,
+	trajectory_type : StringName
+) -> void:
+	var life := _rng.randf_range(PARTICLE_LIFETIME_MIN, PARTICLE_LIFETIME_MAX)
+	var axis := velocity.normalized()
+	_particles.push_back({
+		"position": center,
+		"velocity": velocity,
+		"life": life,
+		"max_life": life,
+		"age": 0.0,
+		"size": size,
+		"color": color,
+		"gravity_scale": gravity_scale,
+		"drag": drag,
+		"origin": center,
+		"trajectory_type": trajectory_type,
+		"trajectory_axis": axis,
+		"trajectory_phase": _rng.randf_range(0.0, TAU),
+		"trajectory_dir": -1.0 if _rng.randf() < 0.5 else 1.0,
+		"segment_timer": _rng.randf_range(0.02, max(0.02, segmented_turn_interval)),
+	})
 
 func _finish_level() -> void:
 	if _level_finished:
@@ -299,6 +463,30 @@ func _update_hud() -> void:
 	_timer_label.text = "Time: %02d" % int(ceil(_time_left))
 	_progress_bar.value = min(_score, target_score)
 
+func _draw_firework_body(position : Vector2, color : Color, firework_type : StringName) -> void:
+	match firework_type:
+		TYPE_RING:
+			draw_rect(
+				Rect2(
+					position - Vector2(ROCKET_RADIUS, ROCKET_RADIUS),
+					Vector2(ROCKET_RADIUS * 2.0, ROCKET_RADIUS * 2.0)
+				),
+				color,
+				true
+			)
+		TYPE_PALM:
+			draw_colored_polygon(
+				PackedVector2Array([
+					position + Vector2(0.0, -ROCKET_RADIUS - 1.0),
+					position + Vector2(ROCKET_RADIUS + 1.0, 0.0),
+					position + Vector2(0.0, ROCKET_RADIUS + 1.0),
+					position + Vector2(-ROCKET_RADIUS - 1.0, 0.0),
+				]),
+				color
+			)
+		_:
+			draw_circle(position, ROCKET_RADIUS, color)
+
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), BACKGROUND_COLOR, true)
 	draw_rect(Rect2(Vector2.ZERO, Vector2(size.x, size.y * 0.45)), BACKGROUND_TOP_COLOR, true)
@@ -310,10 +498,20 @@ func _draw() -> void:
 
 	for firework in _fireworks:
 		var trail : Array[Vector2] = firework["trail"]
+		var firework_type : StringName = firework["type"]
+		var trail_width := 2.0
+		var trail_tint := Color(1.0, 1.0, 1.0, 1.0)
+		match firework_type:
+			TYPE_RING:
+				trail_width = 1.6
+				trail_tint = Color(0.95, 1.0, 1.0, 1.0)
+			TYPE_PALM:
+				trail_width = 2.6
+				trail_tint = Color(0.92, 0.88, 0.8, 1.0)
 		for i in range(1, trail.size()):
 			var alpha := float(i) / float(trail.size())
-			draw_line(trail[i - 1], trail[i], firework["color"] * Color(1, 1, 1, alpha * 0.6), 2.0)
-		draw_circle(firework["position"], ROCKET_RADIUS, firework["color"])
+			draw_line(trail[i - 1], trail[i], firework["color"] * trail_tint * Color(1.0, 1.0, 1.0, alpha * 0.6), trail_width)
+		_draw_firework_body(firework["position"], firework["color"], firework_type)
 
 	for particle in _particles:
 		var life_ratio := clampf(particle["life"] / particle["max_life"], 0.0, 1.0)
