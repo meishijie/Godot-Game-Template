@@ -61,7 +61,7 @@ func _process(delta : float) -> void:
 	_environment_elapsed_seconds = 0.0
 	_toggle_environment_state()
 
-func _unhandled_input(event : InputEvent) -> void:
+func _input(event : InputEvent) -> void:
 	var mouse_event : InputEventMouseButton = event as InputEventMouseButton
 	if mouse_event == null:
 		return
