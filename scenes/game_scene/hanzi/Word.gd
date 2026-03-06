@@ -1,7 +1,7 @@
 extends Node2D
 
 @export var radicals_inside: Array[PackedScene] = []
-@export var split_impulse_strength: float = 220.0
+@export var split_impulse_strength: float = 300.0
 @export var split_seed: int = 1337
 @export_range(16.0, 180.0, 1.0) var placeholder_radius: float = 34.0
 @export var placeholder_fill_color: Color = Color(0.18, 0.20, 0.32, 1.0)
@@ -50,7 +50,7 @@ func split() -> void:
 		radical_node.global_position = global_position
 
 		var base_angle := TAU * (float(index) / float(total))
-		var angle := base_angle + rng.randf_range(-0.3, 0.3)
+		var angle := base_angle + rng.randf_range(-0.8, 0.8)
 		var impulse_scale := rng.randf_range(0.85, 1.15)
 		var impulse := Vector2.RIGHT.rotated(angle) * split_impulse_strength * impulse_scale
 		_apply_impulse(radical_node, impulse)

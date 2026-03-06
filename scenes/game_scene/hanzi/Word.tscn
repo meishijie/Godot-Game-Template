@@ -1,7 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://c20x7x8m8ev1y"]
+[gd_scene format=3 uid="uid://c20x7x8m8ev1y"]
 
-[ext_resource type="Script" path="res://scenes/game_scene/hanzi/Word.gd" id="1_lfnln"]
+[ext_resource type="Script" uid="uid://dr5ri3nkbvd8r" path="res://scenes/game_scene/hanzi/Word.gd" id="1_lfnln"]
 
-[node name="Word" type="Node2D"]
+[node name="Word" type="Node2D" unique_id=562208568]
 script = ExtResource("1_lfnln")
-radicals_inside = Array[PackedScene]([])
