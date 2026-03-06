@@ -2,18 +2,22 @@ extends Node2D
 
 @export var radicals_inside: Array[PackedScene] = []
 @export var split_impulse_strength: float = 300.0
+@export var split_spawn_offset: float = 44.0
 @export var split_seed: int = 1337
 @export_range(16.0, 180.0, 1.0) var placeholder_radius: float = 34.0
 @export var placeholder_fill_color: Color = Color(0.18, 0.20, 0.32, 1.0)
 @export var placeholder_stroke_color: Color = Color(0.95, 0.95, 0.98, 0.95)
 
 var _has_split: bool = false
+@onready var _sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
 
 func _ready() -> void:
 	z_index = 1
 	queue_redraw()
 
 func _draw() -> void:
+	if _sprite != null and _sprite.texture != null:
+		return
 	draw_circle(Vector2.ZERO, placeholder_radius, placeholder_fill_color)
 	draw_arc(Vector2.ZERO, placeholder_radius, 0.0, TAU, 48, placeholder_stroke_color, 2.0, true)
 	var cross_half := placeholder_radius * 0.38
@@ -47,11 +51,10 @@ func split() -> void:
 
 		var radical_node := radical_instance as Node2D
 		spawn_parent.add_child(radical_node)
-		radical_node.global_position = global_position
-
 		var base_angle := TAU * (float(index) / float(total))
-		var angle := base_angle + rng.randf_range(-0.8, 0.8)
-		var impulse_scale := rng.randf_range(0.85, 1.15)
+		var angle := base_angle + rng.randf_range(-0.45, 0.45)
+		radical_node.global_position = global_position + Vector2.RIGHT.rotated(angle) * split_spawn_offset
+		var impulse_scale := rng.randf_range(1.0, 1.25)
 		var impulse := Vector2.RIGHT.rotated(angle) * split_impulse_strength * impulse_scale
 		_apply_impulse(radical_node, impulse)
 

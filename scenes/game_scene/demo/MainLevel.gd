@@ -18,7 +18,8 @@ enum EnvironmentState {
 @export var radical_scene : PackedScene
 @export_range(8.0, 180.0, 1.0) var word_click_radius : float = 64.0
 @export_range(8.0, 200.0, 1.0) var synthesis_cluster_radius : float = 84.0
-@export_range(20.0, 320.0, 1.0) var configured_split_impulse_strength : float = 300.0
+@export_range(20.0, 480.0, 1.0) var configured_split_impulse_strength : float = 380.0
+@export_range(12.0, 120.0, 1.0) var configured_split_spawn_offset : float = 52.0
 @export var initial_environment_state : EnvironmentState = EnvironmentState.LICHUN
 @export var auto_switch_environment : bool = true
 @export_range(1.0, 120.0, 0.5) var environment_switch_interval_seconds : float = 12.0
@@ -133,6 +134,7 @@ func _configure_word_for_split(word_node : Node2D) -> void:
 		radical_scenes.append(radical_scene)
 	_set_property_if_exists(word_node, "radicals_inside", radical_scenes)
 	_set_property_if_exists(word_node, "split_impulse_strength", configured_split_impulse_strength)
+	_set_property_if_exists(word_node, "split_spawn_offset", configured_split_spawn_offset)
 
 func _set_property_if_exists(target : Object, property_name : StringName, value : Variant) -> void:
 	for property_data in target.get_property_list():
