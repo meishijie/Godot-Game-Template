@@ -18,7 +18,7 @@ enum EnvironmentState {
 @export var radical_scene : PackedScene
 @export_range(8.0, 180.0, 1.0) var word_click_radius : float = 64.0
 @export_range(8.0, 200.0, 1.0) var synthesis_cluster_radius : float = 84.0
-@export_range(20.0, 320.0, 1.0) var configured_split_impulse_strength : float = 120.0
+@export_range(20.0, 320.0, 1.0) var configured_split_impulse_strength : float = 300.0
 @export var initial_environment_state : EnvironmentState = EnvironmentState.LICHUN
 @export var auto_switch_environment : bool = true
 @export_range(1.0, 120.0, 0.5) var environment_switch_interval_seconds : float = 12.0
